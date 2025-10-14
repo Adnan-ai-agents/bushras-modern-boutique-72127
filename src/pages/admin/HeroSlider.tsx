@@ -22,6 +22,14 @@ interface HeroSlide {
   is_active: boolean;
 }
 
+interface NewSlideForm {
+  title: string;
+  subtitle: string;
+  cta_text: string;
+  cta_link: string;
+  file: File | null;
+}
+
 const HeroSlider = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,12 +38,9 @@ const HeroSlider = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   
-  const [newSlide, setNewSlide] = useState({
-    title: "",
-    subtitle: "",
-    cta_text: "",
-    cta_link: "",
-  });
+  const [newSlides, setNewSlides] = useState<NewSlideForm[]>([
+    { title: "", subtitle: "", cta_text: "", cta_link: "", file: null }
+  ]);
 
   useEffect(() => {
     checkAdminAndFetch();
@@ -82,7 +87,29 @@ const HeroSlider = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const addNewSlideForm = () => {
+    setNewSlides([...newSlides, { title: "", subtitle: "", cta_text: "", cta_link: "", file: null }]);
+  };
+
+  const removeSlideForm = (index: number) => {
+    if (newSlides.length === 1) {
+      toast({
+        title: "Cannot remove",
+        description: "At least one slide form must remain",
+        variant: "destructive",
+      });
+      return;
+    }
+    setNewSlides(newSlides.filter((_, i) => i !== index));
+  };
+
+  const updateSlideForm = (index: number, field: keyof NewSlideForm, value: string | File | null) => {
+    const updated = [...newSlides];
+    updated[index] = { ...updated[index], [field]: value };
+    setNewSlides(updated);
+  };
+
+  const handleFileSelect = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -98,11 +125,26 @@ const HeroSlider = () => {
       return;
     }
 
-    const maxSize = isVideo ? 5 * 1024 * 1024 : 500 * 1024; // 5MB for video, 500KB for image
+    const maxSize = isVideo ? 5 * 1024 * 1024 : 2 * 1024 * 1024; // 5MB for video, 2MB for image
     if (file.size > maxSize) {
       toast({
         title: "File too large",
-        description: `Max size: ${isVideo ? '5MB for videos' : '500KB for images'}`,
+        description: `Max size: ${isVideo ? '5MB for videos' : '2MB for images'}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateSlideForm(index, 'file', file);
+  };
+
+  const handleSubmitAllSlides = async () => {
+    // Validate all forms have files
+    const invalidForms = newSlides.filter(slide => !slide.file);
+    if (invalidForms.length > 0) {
+      toast({
+        title: "Missing files",
+        description: "Please add an image or video to all slides",
         variant: "destructive",
       });
       return;
@@ -111,41 +153,51 @@ const HeroSlider = () => {
     setUploading(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      for (let i = 0; i < newSlides.length; i++) {
+        const slide = newSlides[i];
+        if (!slide.file) continue;
 
-      const { error: uploadError } = await supabase.storage
-        .from("hero-media")
-        .upload(filePath, file);
+        const isVideo = slide.file.type.startsWith("video/");
+        const fileExt = slide.file.name.split(".").pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
 
-      if (uploadError) throw uploadError;
+        // Upload file
+        const { error: uploadError } = await supabase.storage
+          .from("hero-media")
+          .upload(filePath, slide.file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("hero-media")
-        .getPublicUrl(filePath);
+        if (uploadError) throw uploadError;
 
-      const { error: insertError } = await supabase
-        .from("hero_slides")
-        .insert({
-          media_type: isVideo ? "video" : "image",
-          media_url: publicUrl,
-          title: newSlide.title || null,
-          subtitle: newSlide.subtitle || null,
-          cta_text: newSlide.cta_text || null,
-          cta_link: newSlide.cta_link || null,
-          display_order: slides.length,
-          is_active: true,
-        });
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from("hero-media")
+          .getPublicUrl(filePath);
 
-      if (insertError) throw insertError;
+        // Insert into database
+        const { error: insertError } = await supabase
+          .from("hero_slides")
+          .insert({
+            media_type: isVideo ? "video" : "image",
+            media_url: publicUrl,
+            title: slide.title || null,
+            subtitle: slide.subtitle || null,
+            cta_text: slide.cta_text || null,
+            cta_link: slide.cta_link || null,
+            display_order: slides.length + i,
+            is_active: true,
+          });
+
+        if (insertError) throw insertError;
+      }
 
       toast({
         title: "Success",
-        description: "Slide uploaded successfully",
+        description: `${newSlides.length} slide(s) uploaded successfully`,
       });
 
-      setNewSlide({ title: "", subtitle: "", cta_text: "", cta_link: "" });
+      // Reset forms
+      setNewSlides([{ title: "", subtitle: "", cta_text: "", cta_link: "", file: null }]);
       fetchSlides();
     } catch (error: any) {
       toast({
@@ -237,63 +289,101 @@ const HeroSlider = () => {
 
         {/* Upload Section */}
         <Card className="p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Add New Slide</h2>
+          <h2 className="text-xl font-semibold mb-4">Add New Slides</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <Label>Title</Label>
-              <Input
-                value={newSlide.title}
-                onChange={(e) => setNewSlide({ ...newSlide, title: e.target.value })}
-                placeholder="Elegant Fashion"
-              />
-            </div>
-            <div>
-              <Label>Subtitle</Label>
-              <Input
-                value={newSlide.subtitle}
-                onChange={(e) => setNewSlide({ ...newSlide, subtitle: e.target.value })}
-                placeholder="Discover timeless elegance..."
-              />
-            </div>
-            <div>
-              <Label>CTA Button Text</Label>
-              <Input
-                value={newSlide.cta_text}
-                onChange={(e) => setNewSlide({ ...newSlide, cta_text: e.target.value })}
-                placeholder="Shop Collection"
-              />
-            </div>
-            <div>
-              <Label>CTA Link</Label>
-              <Input
-                value={newSlide.cta_link}
-                onChange={(e) => setNewSlide({ ...newSlide, cta_link: e.target.value })}
-                placeholder="/products"
-              />
-            </div>
+          <div className="space-y-6">
+            {newSlides.map((slide, index) => (
+              <div key={index} className="p-4 border border-border rounded-lg relative">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium">Slide {index + 1}</h3>
+                  {newSlides.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSlideForm(index)}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label>Title</Label>
+                    <Input
+                      value={slide.title}
+                      onChange={(e) => updateSlideForm(index, 'title', e.target.value)}
+                      placeholder="Elegant Fashion"
+                    />
+                  </div>
+                  <div>
+                    <Label>Subtitle</Label>
+                    <Input
+                      value={slide.subtitle}
+                      onChange={(e) => updateSlideForm(index, 'subtitle', e.target.value)}
+                      placeholder="Discover timeless elegance..."
+                    />
+                  </div>
+                  <div>
+                    <Label>CTA Button Text</Label>
+                    <Input
+                      value={slide.cta_text}
+                      onChange={(e) => updateSlideForm(index, 'cta_text', e.target.value)}
+                      placeholder="Shop Collection"
+                    />
+                  </div>
+                  <div>
+                    <Label>CTA Link</Label>
+                    <Input
+                      value={slide.cta_link}
+                      onChange={(e) => updateSlideForm(index, 'cta_link', e.target.value)}
+                      placeholder="/products"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                  <Input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => handleFileSelect(index, e)}
+                    disabled={uploading}
+                    className="hidden"
+                    id={`hero-upload-${index}`}
+                  />
+                  <Label htmlFor={`hero-upload-${index}`} className="cursor-pointer">
+                    <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-sm font-medium mb-2">
+                      {slide.file ? slide.file.name : "Click to upload media"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Images: WebP/JPG (max 2MB, 1920x1080px recommended)
+                      <br />
+                      Videos: MP4 (max 5MB, 10-15 seconds, muted autoplay)
+                    </p>
+                  </Label>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-            <Input
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleFileUpload}
+          <div className="flex gap-4 mt-6">
+            <Button
+              variant="outline"
+              onClick={addNewSlideForm}
               disabled={uploading}
-              className="hidden"
-              id="hero-upload"
-            />
-            <Label htmlFor="hero-upload" className="cursor-pointer">
-              <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-sm font-medium mb-2">
-                {uploading ? "Uploading..." : "Click to upload media"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Images: WebP/JPG (max 500KB, 1920x1080px recommended)
-                <br />
-                Videos: MP4 (max 5MB, 10-15 seconds, muted autoplay)
-              </p>
-            </Label>
+              className="flex-1"
+            >
+              Add Another Slide
+            </Button>
+            <Button
+              onClick={handleSubmitAllSlides}
+              disabled={uploading}
+              className="flex-1"
+            >
+              {uploading ? "Uploading..." : `Upload ${newSlides.length} Slide(s)`}
+            </Button>
           </div>
         </Card>
 

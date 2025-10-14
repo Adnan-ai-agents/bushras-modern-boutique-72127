@@ -167,16 +167,6 @@ const OrderTracking = () => {
               trackingNumber={order.tracking_number}
               estimatedDelivery={order.estimated_delivery}
             />
-                              {status === order.status && 'Current status'}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="space-y-6">

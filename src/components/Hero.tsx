@@ -64,11 +64,12 @@ const Hero = () => {
   if (slides.length === 0) {
     return (
       <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 w-full h-full">
           <img
             src={heroImage}
             alt="Elegant fashion collection featuring traditional and modern designs"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain sm:object-cover"
+            style={{ objectPosition: 'center' }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/40 to-transparent" />
         </div>
@@ -133,7 +134,7 @@ const Hero = () => {
             <CarouselItem key={slide.id}>
               <div className="relative h-screen flex items-center justify-center">
                 {/* Background Media */}
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 w-full h-full">
                   {slide.media_type === "video" ? (
                     <video
                       src={slide.media_url}
@@ -141,13 +142,15 @@ const Hero = () => {
                       muted
                       loop
                       playsInline
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain sm:object-cover"
+                      style={{ objectPosition: 'center' }}
                     />
                   ) : (
                     <img
                       src={slide.media_url}
                       alt={slide.title || "Hero slide"}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain sm:object-cover"
+                      style={{ objectPosition: 'center' }}
                       loading={index === 0 ? "eager" : "lazy"}
                     />
                   )}
