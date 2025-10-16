@@ -68,8 +68,8 @@ const Hero = () => {
           <img
             src={heroImage}
             alt="Elegant fashion collection featuring traditional and modern designs"
-            className="w-full h-full object-contain sm:object-cover"
-            style={{ objectPosition: 'center' }}
+            className="w-full h-full object-cover"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/40 to-transparent" />
         </div>
@@ -95,12 +95,6 @@ const Hero = () => {
               <Button variant="outline" size="lg" className="border-2 hover:bg-accent transition-all duration-300">
                 View Lookbook
               </Button>
-            </div>
-
-            <div className="mt-12 p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border">
-              <p className="text-sm text-muted-foreground mb-2">Get in touch</p>
-              <p className="font-medium text-foreground">📱 +92 319 628 7472</p>
-              <p className="text-sm text-muted-foreground">Ghousia Center, Opposite Mubarkar Masjid, Gizri, Karachi</p>
             </div>
           </div>
         </div>
@@ -142,15 +136,13 @@ const Hero = () => {
                       muted
                       loop
                       playsInline
-                      className="w-full h-full object-contain sm:object-cover"
-                      style={{ objectPosition: 'center' }}
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <img
                       src={slide.media_url}
                       alt={slide.title || "Hero slide"}
-                      className="w-full h-full object-contain sm:object-cover"
-                      style={{ objectPosition: 'center' }}
+                      className="w-full h-full object-cover"
                       loading={index === 0 ? "eager" : "lazy"}
                     />
                   )}
@@ -178,12 +170,6 @@ const Hero = () => {
                         <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     )}
-
-                    <div className="mt-8 md:mt-12 p-3 md:p-4 bg-background/80 backdrop-blur-sm rounded-lg border border-border">
-                      <p className="text-xs md:text-sm text-muted-foreground mb-1 md:mb-2">Get in touch</p>
-                      <p className="text-sm md:text-base font-medium text-foreground">📱 +92 319 628 7472</p>
-                      <p className="text-xs md:text-sm text-muted-foreground">Ghousia Center, Gizri, Karachi</p>
-                    </div>
                   </div>
                 </div>
               </div>

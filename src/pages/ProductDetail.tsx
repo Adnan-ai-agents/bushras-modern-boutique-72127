@@ -165,11 +165,11 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-subtle">
+            <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-card">
               <img 
                 src={productImages[selectedImage]} 
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
             
@@ -179,14 +179,14 @@ const ProductDetail = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`aspect-[4/5] rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImage === index ? 'border-primary' : 'border-transparent'
                     }`}
                   >
                     <img 
                       src={image} 
                       alt={`${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </button>
                 ))}

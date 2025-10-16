@@ -310,9 +310,9 @@ const AdminProducts = () => {
 
   const downloadSampleCsv = () => {
     const sampleData = [
-      ['name', 'price', 'listPrice', 'category', 'countInStock', 'avgRating', 'isPublished', 'description', 'brand', 'images'],
-      ['Sample Dress', '2999', '3999', 'Dress', '10', '5.0', 'true', 'Beautiful handcrafted dress', 'Bushra\'s Collection', 'https://example.com/image1.jpg;https://example.com/image2.jpg'],
-      ['Elegant Jewelry', '1499', '1999', 'Jewelry', '25', '4.8', 'true', 'Stunning jewelry piece', 'Bushra\'s Collection', 'https://example.com/jewelry.jpg']
+      ['name', 'description', 'price', 'category', 'brand', 'stock_quantity', 'images', 'is_active'],
+      ['Peach Color Formal Wear', 'A soft dress, Event, Parties - Premium Quality Fabric', '22000', 'Dresses', 'Bushra\'s Collection', '15', 'https://example.com/image1.jpg;https://example.com/image2.jpg;https://example.com/image3.jpg', 'true'],
+      ['Elegant Jewelry Set', 'Stunning handcrafted jewelry perfect for special occasions', '8500', 'Jewelry', 'Bushra\'s Collection', '25', 'https://example.com/jewelry1.jpg;https://example.com/jewelry2.jpg', 'true']
     ];
     
     const csvContent = sampleData.map(row => row.join(',')).join('\n');

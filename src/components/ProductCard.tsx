@@ -65,15 +65,15 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
       >
         {/* Product Image */}
         <div 
-          className="relative aspect-[4/5] overflow-hidden"
+          className="relative aspect-[4/5] overflow-hidden rounded-lg"
           onMouseMove={handleMouseMove}
         >
           <img
             src={displayImage || '/placeholder.svg'}
             alt={name}
             className={cn(
-              "w-full h-full object-cover transition-transform duration-700",
-              isHovered ? "scale-110" : "scale-100"
+              "w-full h-full object-contain transition-transform duration-700",
+              isHovered ? "scale-105" : "scale-100"
             )}
           />
           

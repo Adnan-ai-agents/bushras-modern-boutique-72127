@@ -79,14 +79,18 @@ const Footer = () => {
             </p>
             <div className="flex gap-3">
               <a 
-                href="#" 
+                href="https://www.instagram.com/bushra.collection" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5 text-primary" />
               </a>
               <a 
-                href="#" 
+                href="https://www.facebook.com/bushra.com.pk/" 
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors"
                 aria-label="Facebook"
               >
