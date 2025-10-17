@@ -68,8 +68,12 @@ const Hero = () => {
           <img
             src={heroImage}
             alt="Elegant fashion collection featuring traditional and modern designs"
-            className="w-full h-full object-contain lg:object-cover lg:object-left-top"
+            className="w-full h-full object-contain object-left"
             loading="eager"
+          />
+          <div
+            className="hidden md:block lg:hidden absolute inset-y-0 right-0 w-[10%] backdrop-blur-sm pointer-events-none"
+            aria-hidden="true"
           />
         </div>
 
@@ -135,16 +139,20 @@ const Hero = () => {
                       muted
                       loop
                       playsInline
-                      className="w-full h-full object-contain lg:object-cover lg:object-left-top"
+                      className="w-full h-full object-contain object-left"
                     />
                   ) : (
                     <img
                       src={slide.media_url}
                       alt={slide.title || "Hero slide"}
-                      className="w-full h-full object-contain lg:object-cover lg:object-left-top"
+                      className="w-full h-full object-contain object-left"
                       loading={index === 0 ? "eager" : "lazy"}
                     />
                   )}
+                  <div
+                    className="hidden md:block lg:hidden absolute inset-y-0 right-0 w-[10%] backdrop-blur-sm pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
 
                 {/* Content */}
