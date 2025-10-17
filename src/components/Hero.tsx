@@ -68,10 +68,9 @@ const Hero = () => {
           <img
             src={heroImage}
             alt="Elegant fashion collection featuring traditional and modern designs"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain lg:object-cover lg:object-left-top"
             loading="eager"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/40 to-transparent" />
         </div>
 
         <div className="relative z-10 container mx-auto px-4">
@@ -136,17 +135,16 @@ const Hero = () => {
                       muted
                       loop
                       playsInline
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain lg:object-cover lg:object-left-top"
                     />
                   ) : (
                     <img
                       src={slide.media_url}
                       alt={slide.title || "Hero slide"}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain lg:object-cover lg:object-left-top"
                       loading={index === 0 ? "eager" : "lazy"}
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/40 to-transparent" />
                 </div>
 
                 {/* Content */}
