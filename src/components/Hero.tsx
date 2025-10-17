@@ -63,42 +63,38 @@ const Hero = () => {
   // Fallback to default hero if no slides
   if (slides.length === 0) {
     return (
-      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 w-full h-full">
-          <img
-            src={heroImage}
-            alt="Elegant fashion collection featuring traditional and modern designs"
-            className="w-full h-full object-contain object-left"
-            loading="eager"
-          />
-          <div
-            className="hidden md:block lg:hidden absolute inset-y-0 right-0 w-[10%] backdrop-blur-sm pointer-events-none"
-            aria-hidden="true"
-          />
-        </div>
-
-        <div className="relative z-10 container mx-auto px-4">
-          <div className="max-w-2xl">
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-foreground mb-6 leading-tight">
+      <section id="home" className="relative min-h-screen overflow-hidden">
+        <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-screen flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          {/* Text Content - Left Side */}
+          <div className="w-full md:w-1/2 pt-20 md:pt-0">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
               Elegant
               <span className="block text-primary">Fashion</span>
               Collection
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
+            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
               Discover timeless elegance with our curated collection of traditional and contemporary designs
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group">
-                Shop Collection
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              
-              <Button variant="outline" size="lg" className="border-2 hover:bg-accent transition-all duration-300">
-                View Lookbook
-              </Button>
-            </div>
+            <Button size="lg" className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto">
+              Shop Collection
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+
+          {/* Image - Right Side */}
+          <div className="w-full md:w-1/2 h-[60vh] md:h-[85vh] relative">
+            <img
+              src={heroImage}
+              alt="Elegant fashion collection featuring traditional and modern designs"
+              className="w-full h-full object-contain"
+              loading="eager"
+            />
+            <div
+              className="hidden md:block lg:hidden absolute inset-y-0 right-0 w-[10%] backdrop-blur-sm pointer-events-none"
+              aria-hidden="true"
+            />
           </div>
         </div>
 
@@ -129,9 +125,31 @@ const Hero = () => {
         <CarouselContent>
           {slides.map((slide, index) => (
             <CarouselItem key={slide.id}>
-              <div className="relative h-screen flex items-center justify-center">
-                {/* Background Media */}
-                <div className="absolute inset-0 w-full h-full">
+              <div className="container mx-auto px-6 lg:px-12 xl:px-16 h-screen flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                {/* Text Content - Left Side */}
+                <div className="w-full md:w-1/2 pt-20 md:pt-0 animate-fade-in">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
+                    {slide.title || "Elegant Fashion Collection"}
+                  </h1>
+                  
+                  <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
+                    {slide.subtitle || "Discover timeless elegance"}
+                  </p>
+
+                  {slide.cta_text && (
+                    <Button 
+                      size="lg" 
+                      className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto"
+                      onClick={() => slide.cta_link && (window.location.href = slide.cta_link)}
+                    >
+                      {slide.cta_text}
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Media - Right Side */}
+                <div className="w-full md:w-1/2 h-[60vh] md:h-[85vh] relative">
                   {slide.media_type === "video" ? (
                     <video
                       src={slide.media_url}
@@ -139,13 +157,13 @@ const Hero = () => {
                       muted
                       loop
                       playsInline
-                      className="w-full h-full object-contain object-left"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <img
                       src={slide.media_url}
                       alt={slide.title || "Hero slide"}
-                      className="w-full h-full object-contain object-left"
+                      className="w-full h-full object-contain"
                       loading={index === 0 ? "eager" : "lazy"}
                     />
                   )}
@@ -153,30 +171,6 @@ const Hero = () => {
                     className="hidden md:block lg:hidden absolute inset-y-0 right-0 w-[10%] backdrop-blur-sm pointer-events-none"
                     aria-hidden="true"
                   />
-                </div>
-
-                {/* Content */}
-                <div className="relative z-10 container mx-auto px-4">
-                  <div className="max-w-2xl animate-fade-in">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-foreground mb-4 md:mb-6 leading-tight">
-                      {slide.title || "Elegant Fashion Collection"}
-                    </h1>
-                    
-                    <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
-                      {slide.subtitle || "Discover timeless elegance"}
-                    </p>
-
-                    {slide.cta_text && (
-                      <Button 
-                        size="lg" 
-                        className="bg-gradient-hero hover:shadow-elegant transition-all duration-300 group w-full sm:w-auto"
-                        onClick={() => slide.cta_link && (window.location.href = slide.cta_link)}
-                      >
-                        {slide.cta_text}
-                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    )}
-                  </div>
                 </div>
               </div>
             </CarouselItem>
