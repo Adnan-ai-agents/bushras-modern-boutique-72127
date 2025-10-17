@@ -92,7 +92,7 @@ const Hero = () => {
               loading="eager"
             />
             <div
-              className="hidden md:block lg:hidden absolute inset-y-0 right-0 w-[10%] backdrop-blur-sm pointer-events-none"
+              className="hidden md:block lg:hidden absolute inset-y-0 left-0 w-[10%] backdrop-blur-sm pointer-events-none"
               aria-hidden="true"
             />
           </div>
@@ -168,7 +168,7 @@ const Hero = () => {
                     />
                   )}
                   <div
-                    className="hidden md:block lg:hidden absolute inset-y-0 right-0 w-[10%] backdrop-blur-sm pointer-events-none"
+                    className="hidden md:block lg:hidden absolute inset-y-0 left-0 w-[10%] backdrop-blur-sm pointer-events-none"
                     aria-hidden="true"
                   />
                 </div>
