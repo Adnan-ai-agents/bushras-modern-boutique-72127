@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom";
+import Profile from "./pages/Profile";
+import Promotions from "./pages/admin/Promotions";
 import { useAuthStore } from "@/store/auth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -60,6 +62,8 @@ const App = () => {
           <Route path="/admin/hero-slider" element={<AdminHeroSlider />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/team" element={<AdminTeam />} />
+          <Route path="/admin/promotions" element={<Promotions />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>
