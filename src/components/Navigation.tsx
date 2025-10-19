@@ -26,6 +26,7 @@ const Navigation = () => {
   };
 
   const isAdmin = user?.roles?.includes('admin') || false;
+  const isSuperAdmin = (user?.roles as any)?.includes('super_admin') || false;
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -37,7 +38,8 @@ const Navigation = () => {
       { name: "Dashboard", href: "/admin" },
       { name: "Manage Products", href: "/admin/products" },
       { name: "Manage Orders", href: "/admin/orders" },
-    ] : [])
+    ] : []),
+    ...(isSuperAdmin ? [{ name: "Permissions", href: "/admin/permissions" }] : [])
   ];
 
   return (

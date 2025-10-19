@@ -27,6 +27,7 @@ import AdminAnalytics from "./pages/admin/Analytics";
 import AdminTeam from "./pages/admin/TeamManagement";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AdminPermissionManagement from "./pages/admin/PermissionManagement";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => {
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
           <Route path="/admin/team" element={<AdminTeam />} />
           <Route path="/admin/promotions" element={<Promotions />} />
+          <Route path="/admin/permissions" element={<AdminPermissionManagement />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
