@@ -36,8 +36,7 @@ const Products = () => {
       let query = supabase
         .from('products')
         .select('*')
-        .eq('is_active', true)
-        .eq('is_published', true);
+        .eq('is_active', true);
 
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);

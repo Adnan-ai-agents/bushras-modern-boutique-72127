@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
+import { getAppUrl } from "./domain";
 
 export interface AuthUser extends User {
   profile?: {
@@ -12,7 +13,7 @@ export interface AuthUser extends User {
 
 export const authService = {
   async signUp(email: string, password: string, name: string) {
-    const redirectUrl = `${import.meta.env.VITE_APP_URL || window.location.origin}/`;
+    const redirectUrl = `${getAppUrl()}/`;
     
     const { data, error } = await supabase.auth.signUp({
       email,

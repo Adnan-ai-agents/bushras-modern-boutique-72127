@@ -11,6 +11,7 @@ import { Loader2, ArrowLeft, Mail, Smartphone, CheckCircle } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { getAppUrl } from "@/lib/domain";
 
 const emailSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -41,11 +42,10 @@ const ForgotPassword = () => {
       const validatedData = emailSchema.parse({ email });
       setIsLoading(true);
 
-      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       const { error } = await supabase.auth.resetPasswordForEmail(
         validatedData.email,
         {
-          redirectTo: `${appUrl}/reset-password`,
+          redirectTo: `${getAppUrl()}/reset-password`,
         }
       );
 
