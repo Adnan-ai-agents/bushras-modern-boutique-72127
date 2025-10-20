@@ -19,6 +19,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [priceRange, setPriceRange] = useState([0, 50000]);
+  const [maxPrice, setMaxPrice] = useState(50000);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -36,7 +37,8 @@ const Products = () => {
       let query = supabase
         .from('products')
         .select('*')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('is_published', true);
 
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
@@ -51,7 +53,16 @@ const Products = () => {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+      
+      const productsData = data || [];
+      setProducts(productsData);
+      
+      // Calculate dynamic max price from products
+      if (productsData.length > 0) {
+        const prices = productsData.map(p => p.price);
+        const calculatedMax = Math.max(...prices);
+        setMaxPrice(Math.ceil(calculatedMax / 1000) * 1000); // Round up to nearest 1000
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -74,7 +85,7 @@ const Products = () => {
   const clearFilters = () => {
     setSelectedCategories([]);
     setSelectedSizes([]);
-    setPriceRange([0, 50000]);
+    setPriceRange([0, maxPrice]);
     setSearchQuery('');
   };
 
@@ -103,7 +114,7 @@ const Products = () => {
         <Slider
           value={priceRange}
           onValueChange={setPriceRange}
-          max={50000}
+          max={maxPrice}
           step={500}
           className="mb-2"
         />
