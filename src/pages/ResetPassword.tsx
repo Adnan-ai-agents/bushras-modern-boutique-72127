@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,18 +19,65 @@ const resetPasswordSchema = z.object({
 });
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const isRecoveryMode = searchParams.get('type') === 'recovery';
 
   const [form, setForm] = useState({
     password: "",
     confirmPassword: "",
   });
+
+  // Handle session from URL hash params (recovery/signup links)
+  useEffect(() => {
+    const handleSession = async () => {
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      const access_token = hashParams.get('access_token');
+      const refresh_token = hashParams.get('refresh_token');
+      const type = hashParams.get('type');
+
+      // If we have tokens in URL, set the session first
+      if (access_token && refresh_token) {
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+
+          if (error) throw error;
+
+          // For signup confirmation, just redirect to home
+          if (type === 'signup') {
+            toast({
+              title: "Email verified!",
+              description: "Your account has been confirmed. Welcome!",
+            });
+            setTimeout(() => navigate("/"), 1500);
+            return;
+          }
+
+          setSessionReady(true);
+        } catch (err) {
+          console.error('Session error:', err);
+          setError("Invalid or expired reset link. Please request a new one.");
+        }
+      } else {
+        // Check if user already has a session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSessionReady(true);
+        } else {
+          setError("No active session. Please use the link from your email.");
+        }
+      }
+    };
+
+    handleSession();
+  }, [location, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +125,21 @@ const ResetPassword = () => {
             <CardDescription>
               Your password has been updated. Redirecting to login...
             </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  // Don't show form until session is ready
+  if (!sessionReady && !error) {
+    return (
+      <div className="min-h-screen bg-gradient-elegant flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
+            <CardTitle>Verifying...</CardTitle>
+            <CardDescription>Please wait while we verify your reset link</CardDescription>
           </CardHeader>
         </Card>
       </div>
