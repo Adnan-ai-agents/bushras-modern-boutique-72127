@@ -13,9 +13,11 @@ interface ProductCardProps {
   image: string | string[] | null;
   category: string | null;
   isNew?: boolean;
+  averageRating?: number;
+  totalReviews?: number;
 }
 
-const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardProps) => {
+const ProductCard = ({ id, name, price, image, category, isNew, averageRating = 0, totalReviews = 0 }: ProductCardProps) => {
   const { addItem } = useCartStore();
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
@@ -152,14 +154,26 @@ const ProductCard = ({ id, name, price, image, category, isNew }: ProductCardPro
             <span className="text-2xl font-bold text-primary">
               Rs. {price.toLocaleString()}
             </span>
-            <div className="flex items-center gap-1">
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span key={star} className="text-primary text-sm">★</span>
-                ))}
+            {totalReviews > 0 ? (
+              <div className="flex items-center gap-1">
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span 
+                      key={star} 
+                      className={cn(
+                        "text-sm",
+                        star <= Math.round(averageRating) ? "text-primary" : "text-muted-foreground"
+                      )}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground ml-1">({totalReviews})</span>
               </div>
-              <span className="text-xs text-muted-foreground ml-1">(24)</span>
-            </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">No reviews</span>
+            )}
           </div>
         </div>
       </div>

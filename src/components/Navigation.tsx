@@ -20,8 +20,12 @@ const Navigation = () => {
   const handleSignOut = async () => {
     const { error } = await authService.signOut();
     if (!error) {
+      // Clear auth store to prevent admin dashboard access
+      useAuthStore.getState().setUser(null);
+      useAuthStore.getState().setSession(null);
       toast({ title: "Signed out successfully" });
       navigate("/");
+      window.location.reload(); // Force refresh to clear all state
     }
   };
 
