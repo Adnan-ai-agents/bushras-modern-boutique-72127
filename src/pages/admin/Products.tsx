@@ -60,6 +60,7 @@ const AdminProducts = () => {
     brand: 'Bushra\'s Collection',
     stock_quantity: '0',
     is_published: true,
+    initial_review_count: '0',
   });
   const [productImages, setProductImages] = useState<string[]>([]);
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -122,7 +123,8 @@ const AdminProducts = () => {
       const productData = {
         ...validatedData,
         images: productImages,
-        is_published: formData.is_published
+        is_published: formData.is_published,
+        initial_review_count: parseInt(formData.initial_review_count) || 0
       };
 
       if (editingProduct) {
@@ -163,6 +165,7 @@ const AdminProducts = () => {
         brand: 'Bushra\'s Collection',
         stock_quantity: '0',
         is_published: true,
+        initial_review_count: '0',
       });
       setProductImages([]);
       fetchProducts();
@@ -195,6 +198,7 @@ const AdminProducts = () => {
       brand: product.brand,
       stock_quantity: product.stock_quantity.toString(),
       is_published: product.is_published ?? true,
+      initial_review_count: (product as any).initial_review_count?.toString() || '0',
     });
     setProductImages(Array.isArray(product.images) ? product.images : []);
     setIsDialogOpen(true);
@@ -366,6 +370,7 @@ const AdminProducts = () => {
                       brand: 'Bushra\'s Collection',
                       stock_quantity: '0',
                       is_published: true,
+                      initial_review_count: '0',
                     });
                     setProductImages([]);
                   }}>
@@ -451,6 +456,21 @@ const AdminProducts = () => {
                           onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                           required
                         />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="initial_review_count">Legacy Review Count</Label>
+                        <Input
+                          id="initial_review_count"
+                          type="number"
+                          min="0"
+                          value={formData.initial_review_count || '0'}
+                          onChange={(e) => setFormData({ ...formData, initial_review_count: e.target.value })}
+                          placeholder="Reviews from past 20 years"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Enter existing review count from your legacy system
+                        </p>
                       </div>
 
                       <ImageUpload

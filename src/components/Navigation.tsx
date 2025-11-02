@@ -37,7 +37,7 @@ const Navigation = () => {
     { name: "Products", href: "/products" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
-    ...(user ? [{ name: "Wishlist", href: "/wishlist" }, { name: "Orders", href: "/orders" }] : []),
+    ...(user ? [{ name: "Profile", href: "/profile" }, { name: "Wishlist", href: "/wishlist" }, { name: "Orders", href: "/orders" }] : []),
     ...(isAdmin ? [{ name: "Dashboard", href: "/admin" }] : []),
   ];
 
