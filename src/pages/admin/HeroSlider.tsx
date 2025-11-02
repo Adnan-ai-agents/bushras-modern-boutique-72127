@@ -48,18 +48,38 @@ const HeroSlider = () => {
 
   const checkAdminAndFetch = async () => {
     if (!user) {
+      toast({
+        title: "Access denied",
+        description: "Please sign in to continue",
+        variant: "destructive",
+      });
       navigate("/auth");
       return;
     }
 
-    const { data: roleData } = await supabase
+    const { data: roleData, error } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .eq("user_id", user.id);
 
-    if (!roleData) {
+    if (error) {
+      toast({
+        title: "Error checking permissions",
+        description: error.message,
+        variant: "destructive",
+      });
+      navigate("/");
+      return;
+    }
+
+    const isAdmin = roleData?.some(r => r.role === 'admin');
+    
+    if (!isAdmin) {
+      toast({
+        title: "Access denied",
+        description: "You don't have permission to access this page",
+        variant: "destructive",
+      });
       navigate("/");
       return;
     }

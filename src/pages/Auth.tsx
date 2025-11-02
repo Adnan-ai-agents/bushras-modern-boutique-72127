@@ -65,11 +65,20 @@ const Auth = () => {
       }
 
       if (data.user) {
+        // Check user role and redirect accordingly
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id);
+
+        const isAdmin = roleData?.some(r => r.role === 'admin');
+        
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
-        navigate("/");
+        
+        navigate(isAdmin ? "/admin" : "/");
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
