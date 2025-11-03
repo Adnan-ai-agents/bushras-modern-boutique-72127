@@ -4,11 +4,19 @@
 -- This fixes RLS security issues and adds granular permissions
 -- =====================================================
 
--- 1. Create app_role enum if not exists
-DO $$ BEGIN
+-- 1. Create app_role enum if not exists and add super_admin if missing
+DO $$ 
+BEGIN
+  -- Try to create the enum
   CREATE TYPE public.app_role AS ENUM ('user', 'admin', 'super_admin');
 EXCEPTION
-  WHEN duplicate_object THEN null;
+  WHEN duplicate_object THEN 
+    -- If enum exists, try to add super_admin if it doesn't exist
+    BEGIN
+      ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
+    EXCEPTION
+      WHEN OTHERS THEN null;
+    END;
 END $$;
 
 -- 2. Create user_roles table if not exists
