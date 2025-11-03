@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { authService } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { useAuthStore } from "@/store/auth";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -31,8 +32,16 @@ const signUpSchema = z.object({
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
-  const { toast } = useToast();
+const navigate = useNavigate();
+const { toast } = useToast();
+const { user, initialized } = useAuthStore();
+
+useEffect(() => {
+  if (initialized && user) {
+    const isAdmin = user.roles?.includes('admin');
+    navigate(isAdmin ? '/admin' : '/');
+  }
+}, [initialized, user, navigate]);
 
   const [signInForm, setSignInForm] = useState({
     email: "",
