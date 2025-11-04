@@ -82,7 +82,7 @@ useEffect(() => {
           .select("role")
           .eq("user_id", data.user.id);
 
-        const isAdmin = roleData?.some(r => r.role === 'admin' || r.role === 'super_admin');
+        const isAdmin = roleData?.some(r => r.role === 'admin' || (r.role as string) === 'super_admin');
         
         toast({
           title: "Welcome back!",
@@ -186,6 +186,7 @@ useEffect(() => {
   };
 
 // Social auth rendering: Google is always available when enabled in Cloud.
+const googleEnabled = true;
 const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
 
   return (

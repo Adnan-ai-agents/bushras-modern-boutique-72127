@@ -8,7 +8,7 @@ export interface AuthUser extends User {
     phone?: string;
     address?: any;
   };
-  roles?: Array<'admin' | 'moderator' | 'user'>;
+  roles?: Array<'admin' | 'moderator' | 'user' | 'super_admin'>;
 }
 
 export const authService = {
