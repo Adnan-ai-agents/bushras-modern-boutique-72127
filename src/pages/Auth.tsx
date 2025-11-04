@@ -37,9 +37,11 @@ const { toast } = useToast();
 const { user, initialized } = useAuthStore();
 
 useEffect(() => {
-  if (initialized && user) {
-    const isAdmin = user.roles?.includes('admin');
-    navigate(isAdmin ? '/admin' : '/');
+  if (!initialized) return;
+  if (user) {
+    const roles = user.roles || [];
+    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+    navigate(isAdmin ? '/admin/dashboard' : '/');
   }
 }, [initialized, user, navigate]);
 
@@ -80,14 +82,14 @@ useEffect(() => {
           .select("role")
           .eq("user_id", data.user.id);
 
-        const isAdmin = roleData?.some(r => r.role === 'admin');
+        const isAdmin = roleData?.some(r => r.role === 'admin' || r.role === 'super_admin');
         
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
         
-        navigate(isAdmin ? "/admin" : "/");
+        navigate(isAdmin ? "/admin/dashboard" : "/");
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -153,7 +155,7 @@ useEffect(() => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
 
@@ -172,7 +174,7 @@ useEffect(() => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
 
@@ -183,9 +185,8 @@ useEffect(() => {
     }
   };
 
-  // Check if social auth is enabled via env variables
-  const googleEnabled = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const facebookEnabled = import.meta.env.VITE_FACEBOOK_APP_ID;
+// Social auth rendering: Google is always available when enabled in Cloud.
+const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
 
   return (
     <div className="min-h-screen bg-gradient-elegant flex items-center justify-center p-4">
