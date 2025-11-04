@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,15 +35,19 @@ const Auth = () => {
 const navigate = useNavigate();
 const { toast } = useToast();
 const { user, initialized } = useAuthStore();
+const location = useLocation();
+const from = location.state?.from?.pathname || '/';
 
+// Redirect if already logged in
 useEffect(() => {
   if (!initialized) return;
   if (user) {
     const roles = user.roles || [];
     const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    navigate(isAdmin ? '/admin/dashboard' : '/');
+    const redirectTo = isAdmin ? '/admin/dashboard' : from;
+    navigate(redirectTo, { replace: true });
   }
-}, [initialized, user, navigate]);
+}, [initialized, user, navigate, from]);
 
   const [signInForm, setSignInForm] = useState({
     email: "",
@@ -76,20 +80,11 @@ useEffect(() => {
       }
 
       if (data.user) {
-        // Check user role and redirect accordingly
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id);
-
-        const isAdmin = roleData?.some(r => r.role === 'admin' || (r.role as string) === 'super_admin');
-        
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
-        
-        navigate(isAdmin ? "/admin/dashboard" : "/");
+        // Auth store will handle redirect via useEffect
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
