@@ -266,11 +266,10 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                   
                   {(googleEnabled || facebookEnabled) && (
                     <>
-                      <div className="relative">
-                        <Separator />
-                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
-                          Or continue with
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <Separator className="flex-1" />
+                        <span className="text-xs text-muted-foreground">Or continue with</span>
+                        <Separator className="flex-1" />
                       </div>
                       
                       <div className="grid grid-cols-2 gap-3">
@@ -390,12 +389,11 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                   
                   {(googleEnabled || facebookEnabled) && (
                     <>
-                      <div className="relative">
-                        <Separator />
-                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">
-                          Or sign up with
-                        </span>
-                      </div>
+                        <div className="flex items-center gap-3">
+                          <Separator className="flex-1" />
+                          <span className="text-xs text-muted-foreground">Or sign up with</span>
+                          <Separator className="flex-1" />
+                        </div>
                       
                       <div className="grid grid-cols-2 gap-3">
                         {googleEnabled && (
