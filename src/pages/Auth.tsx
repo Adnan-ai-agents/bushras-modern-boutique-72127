@@ -151,7 +151,7 @@ useEffect(() => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${redirectUrl}/auth`,
+          redirectTo: redirectUrl,
         },
       });
 
@@ -171,7 +171,7 @@ useEffect(() => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
-          redirectTo: `${redirectUrl}/auth`,
+          redirectTo: redirectUrl,
         },
       });
 

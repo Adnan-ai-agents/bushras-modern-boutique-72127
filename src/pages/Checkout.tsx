@@ -7,12 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, CreditCard, Truck, Package } from "lucide-react";
+import { ArrowLeft, MessageCircle, Truck, Package } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -31,13 +29,11 @@ const Checkout = () => {
     notes: ''
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('cod');
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setShippingInfo({ ...shippingInfo, [e.target.name]: e.target.value });
   };
 
-  const handleContinueToPayment = () => {
+  const handleContactWhatsApp = () => {
     if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.city) {
       toast({
         title: "Missing Information",
@@ -46,61 +42,34 @@ const Checkout = () => {
       });
       return;
     }
-    setStep(2);
-  };
 
-  const handlePlaceOrder = async () => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please login to place an order",
-        variant: "destructive"
-      });
-      navigate('/auth');
-      return;
-    }
+    // Create WhatsApp message with order details
+    const orderDetails = items.map(item => 
+      `${item.name} x${item.quantity} - PKR ${(item.price * item.quantity).toLocaleString()}`
+    ).join('\n');
 
-    setIsSubmitting(true);
-    try {
-      const { data: order, error: orderError} = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          total: getTotalPrice(),
-          items: items as any,
-          shipping_address: {
-            name: shippingInfo.name,
-            phone: shippingInfo.phone,
-            address: shippingInfo.address,
-            city: shippingInfo.city,
-            postalCode: shippingInfo.postalCode,
-            notes: shippingInfo.notes
-          },
-          status: 'pending'
-        })
-        .select()
-        .single();
+    const message = `🛍️ *New Order Request*\n\n` +
+      `*Customer Details:*\n` +
+      `Name: ${shippingInfo.name}\n` +
+      `Phone: ${shippingInfo.phone}\n` +
+      `Address: ${shippingInfo.address}\n` +
+      `City: ${shippingInfo.city}\n` +
+      `Postal Code: ${shippingInfo.postalCode || 'N/A'}\n\n` +
+      `*Order Items:*\n${orderDetails}\n\n` +
+      `*Total Amount: PKR ${getTotalPrice().toLocaleString()}*\n\n` +
+      `${shippingInfo.notes ? `*Notes:* ${shippingInfo.notes}\n\n` : ''}` +
+      `Please confirm my order and provide payment details.`;
 
-      if (orderError) throw orderError;
-
-      clearCart();
-      
-      toast({
-        title: "Order Placed Successfully!",
-        description: "We'll contact you shortly to confirm your order"
-      });
-
-      navigate(`/orders/${order.id}`);
-    } catch (error) {
-      console.error('Error placing order:', error);
-      toast({
-        title: "Error",
-        description: "Failed to place order. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Replace with your actual WhatsApp number (without + symbol)
+    const whatsappNumber = '923001234567'; // Update this number
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    
+    window.open(whatsappUrl, '_blank');
+    
+    toast({
+      title: "Opening WhatsApp",
+      description: "Your order details have been prepared. Complete your order on WhatsApp!"
+    });
   };
 
   if (items.length === 0) {
@@ -131,97 +100,71 @@ const Checkout = () => {
 
         <h1 className="text-4xl font-serif font-bold text-foreground mb-8">Checkout</h1>
 
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-              <Truck className="h-5 w-5" />
-            </div>
-            <div className={`h-1 w-24 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}></div>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-              <CreditCard className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            {step === 1 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Shipping Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Full Name *</Label>
-                      <Input id="name" name="name" value={shippingInfo.name} onChange={handleInputChange} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone Number *</Label>
-                      <Input id="phone" name="phone" value={shippingInfo.phone} onChange={handleInputChange} required />
-                    </div>
-                  </div>
-                  
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="address">Complete Address *</Label>
-                    <Textarea id="address" name="address" value={shippingInfo.address} onChange={handleInputChange} required />
+                    <Label htmlFor="name">Full Name *</Label>
+                    <Input id="name" name="name" value={shippingInfo.name} onChange={handleInputChange} required />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">City *</Label>
-                      <Input id="city" name="city" value={shippingInfo.city} onChange={handleInputChange} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="postalCode">Postal Code</Label>
-                      <Input id="postalCode" name="postalCode" value={shippingInfo.postalCode} onChange={handleInputChange} />
-                    </div>
-                  </div>
-                  
                   <div>
-                    <Label htmlFor="notes">Order Notes (Optional)</Label>
-                    <Textarea id="notes" name="notes" value={shippingInfo.notes} onChange={handleInputChange} placeholder="Any special instructions?" />
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input id="phone" name="phone" value={shippingInfo.phone} onChange={handleInputChange} required />
                   </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="address">Complete Address *</Label>
+                  <Textarea id="address" name="address" value={shippingInfo.address} onChange={handleInputChange} required />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="city">City *</Label>
+                    <Input id="city" name="city" value={shippingInfo.city} onChange={handleInputChange} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="postalCode">Postal Code</Label>
+                    <Input id="postalCode" name="postalCode" value={shippingInfo.postalCode} onChange={handleInputChange} />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="notes">Order Notes (Optional)</Label>
+                  <Textarea id="notes" name="notes" value={shippingInfo.notes} onChange={handleInputChange} placeholder="Any special instructions?" />
+                </div>
 
-                  <Button className="w-full" size="lg" onClick={handleContinueToPayment}>
-                    Continue to Payment
+                <div className="pt-4 border-t">
+                  <div className="bg-accent/20 p-4 rounded-lg mb-4">
+                    <div className="flex items-start gap-3">
+                      <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold text-foreground mb-1">Order via WhatsApp</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Click the button below to send your order details directly to our WhatsApp. 
+                          We'll confirm your order and provide payment instructions.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full" 
+                    size="lg" 
+                    onClick={handleContactWhatsApp}
+                  >
+                    <MessageCircle className="h-5 w-5 mr-2" />
+                    Contact on WhatsApp for Order & Payment
                   </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payment Method</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                      <RadioGroupItem value="cod" id="cod" />
-                      <Label htmlFor="cod" className="flex-1 cursor-pointer">
-                        <div className="font-semibold">Cash on Delivery</div>
-                        <div className="text-sm text-muted-foreground">Pay when you receive your order</div>
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                      <RadioGroupItem value="bank" id="bank" />
-                      <Label htmlFor="bank" className="flex-1 cursor-pointer">
-                        <div className="font-semibold">Bank Transfer</div>
-                        <div className="text-sm text-muted-foreground">We'll provide bank details after order</div>
-                      </Label>
-                    </div>
-                  </RadioGroup>
-
-                  <div className="flex gap-4">
-                    <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>
-                      Back to Shipping
-                    </Button>
-                    <Button className="flex-1" size="lg" onClick={handlePlaceOrder} disabled={isSubmitting}>
-                      {isSubmitting ? 'Placing Order...' : 'Place Order'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div>
