@@ -13,14 +13,11 @@ import Navigation from "@/components/Navigation";
 interface Order {
   id: string;
   user_id: string;
-  total_amount: number;
+  total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  payment_status: 'pending' | 'completed' | 'failed' | 'refunded';
-  payment_method: string;
   created_at: string;
   profiles: {
     name: string;
-    email: string;
   };
 }
 
@@ -47,14 +44,13 @@ const AdminOrders = () => {
         .select(`
           *,
           profiles (
-            name,
-            email
+            name
           )
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data || []) as any);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast({
@@ -171,7 +167,6 @@ const AdminOrders = () => {
                       <TableHead>Customer</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Payment</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -183,22 +178,12 @@ const AdminOrders = () => {
                           #{order.id.slice(-8)}
                         </TableCell>
                         <TableCell>
-                          <div>
-                            <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {order.profiles?.email || 'No email'}
-                            </div>
-                          </div>
+                          <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
                         </TableCell>
-                        <TableCell>PKR {order.total_amount}</TableCell>
+                        <TableCell>PKR {order.total}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(order.status)}>
                             {order.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getPaymentStatusBadgeVariant(order.payment_status)}>
-                            {order.payment_status}
                           </Badge>
                         </TableCell>
                         <TableCell>

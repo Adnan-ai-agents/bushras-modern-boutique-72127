@@ -21,8 +21,7 @@ const FeaturedProducts = () => {
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .eq('is_active', true)
-          .eq('is_published', true)
+          .eq('featured', true)
           .order('created_at', { ascending: false })
           .limit(6);
 
@@ -31,7 +30,7 @@ const FeaturedProducts = () => {
           return;
         }
 
-        setProducts(data || []);
+        setProducts((data as any) || []);
       } catch (error) {
         console.error('Error:', error);
       } finally {

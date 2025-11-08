@@ -9,7 +9,7 @@ import { ArrowLeft, Package, Truck, CheckCircle, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
-import OrderTimeline from "@/components/OrderTimeline";
+
 
 const OrderTracking = () => {
   const { orderId } = useParams();
@@ -41,15 +41,8 @@ const OrderTracking = () => {
 
       if (orderError) throw orderError;
 
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('order_items')
-        .select('*, products(*)')
-        .eq('order_id', orderId);
-
-      if (itemsError) throw itemsError;
-
       setOrder(orderData);
-      setOrderItems(itemsData || []);
+      setOrderItems((orderData?.items as any[]) || []);
     } catch (error) {
       console.error('Error fetching order:', error);
       toast({
@@ -140,33 +133,26 @@ const OrderTracking = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {orderItems.map(item => (
-                    <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
+                  {orderItems.map((item: any, index: number) => (
+                    <div key={index} className="flex gap-4 p-4 border rounded-lg">
                       <img
-                        src={item.products?.images?.[0] ? `/assets/${item.products.images[0]}` : '/placeholder.svg'}
-                        alt={item.products?.name}
+                        src={item.image || '/placeholder.svg'}
+                        alt={item.name}
                         className="w-20 h-20 object-cover rounded"
                       />
                       <div className="flex-1">
-                        <h4 className="font-semibold">{item.products?.name}</h4>
+                        <h4 className="font-semibold">{item.name}</h4>
                         <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
-                        <p className="text-sm font-medium">PKR {item.unit_price.toLocaleString()} each</p>
+                        <p className="text-sm font-medium">PKR {item.price.toLocaleString()} each</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">PKR {item.total_price.toLocaleString()}</p>
+                        <p className="font-bold">PKR {(item.price * item.quantity).toLocaleString()}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
-
-            <OrderTimeline 
-              orderId={order.id} 
-              currentStatus={order.status}
-              trackingNumber={order.tracking_number}
-              estimatedDelivery={order.estimated_delivery}
-            />
           </div>
 
           <div className="space-y-6">
@@ -191,7 +177,7 @@ const OrderTracking = () => {
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>PKR {order.total_amount.toLocaleString()}</span>
+                  <span>PKR {order.total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -200,18 +186,12 @@ const OrderTracking = () => {
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>PKR {order.total_amount.toLocaleString()}</span>
+                  <span>PKR {order.total.toLocaleString()}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-sm">
-                  <span>Payment Method</span>
-                  <span className="capitalize">{order.payment_method}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Payment Status</span>
-                  <Badge variant={order.payment_status === 'paid' ? 'default' : 'secondary'}>
-                    {order.payment_status}
-                  </Badge>
+                  <span>Status</span>
+                  <Badge>{order.status}</Badge>
                 </div>
               </CardContent>
             </Card>

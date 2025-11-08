@@ -46,14 +46,14 @@ const AdminDashboard = () => {
       // Fetch orders count and total revenue
       const { data: orders, count: ordersCount } = await supabase
         .from('orders')
-        .select('total_amount', { count: 'exact' });
+        .select('total', { count: 'exact' });
 
       // Fetch users count
       const { count: usersCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      const revenue = orders?.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) || 0;
+      const revenue = orders?.reduce((sum, order) => sum + Number(order.total || 0), 0) || 0;
 
       setStats({
         totalProducts: productsCount || 0,

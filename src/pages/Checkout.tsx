@@ -62,41 +62,28 @@ const Checkout = () => {
 
     setIsSubmitting(true);
     try {
-      const { data: order, error: orderError } = await supabase
+      const { data: order, error: orderError} = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          total_amount: getTotalPrice(),
-          status: 'pending',
-          payment_status: 'pending',
-          payment_method: paymentMethod,
+          total: getTotalPrice(),
+          items: items as any,
           shipping_address: {
             name: shippingInfo.name,
             phone: shippingInfo.phone,
             address: shippingInfo.address,
             city: shippingInfo.city,
-            postalCode: shippingInfo.postalCode
+            postalCode: shippingInfo.postalCode,
+            notes: shippingInfo.notes
           },
-          notes: shippingInfo.notes
+          status: 'pending'
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
 
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.id,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.price * item.quantity
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-    clearCart();
+      clearCart();
       
       toast({
         title: "Order Placed Successfully!",

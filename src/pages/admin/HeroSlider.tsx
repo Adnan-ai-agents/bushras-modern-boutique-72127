@@ -12,14 +12,13 @@ import { useAuthStore } from "@/store/auth";
 
 interface HeroSlide {
   id: string;
-  media_type: 'image' | 'video';
-  media_url: string;
+  image_url: string;
   title: string | null;
   subtitle: string | null;
   cta_text: string | null;
   cta_link: string | null;
-  display_order: number;
-  is_active: boolean;
+  order_index: number;
+  active: boolean;
 }
 
 interface NewSlideForm {
@@ -92,10 +91,10 @@ const HeroSlider = () => {
       const { data, error } = await supabase
         .from("hero_slides")
         .select("*")
-        .order("display_order", { ascending: true });
+        .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setSlides((data || []) as HeroSlide[]);
+      setSlides(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -133,23 +132,22 @@ const HeroSlider = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const isVideo = file.type.startsWith("video/");
     const isImage = file.type.startsWith("image/");
 
-    if (!isImage && !isVideo) {
+    if (!isImage) {
       toast({
         title: "Invalid file",
-        description: "Please upload an image or video file",
+        description: "Please upload an image file",
         variant: "destructive",
       });
       return;
     }
 
-    const maxSize = isVideo ? 5 * 1024 * 1024 : 2 * 1024 * 1024; // 5MB for video, 2MB for image
+    const maxSize = 2 * 1024 * 1024; // 2MB for images
     if (file.size > maxSize) {
       toast({
         title: "File too large",
-        description: `Max size: ${isVideo ? '5MB for videos' : '2MB for images'}`,
+        description: "Max size: 2MB for images",
         variant: "destructive",
       });
       return;
@@ -177,7 +175,6 @@ const HeroSlider = () => {
         const slide = newSlides[i];
         if (!slide.file) continue;
 
-        const isVideo = slide.file.type.startsWith("video/");
         const fileExt = slide.file.name.split(".").pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
@@ -198,14 +195,13 @@ const HeroSlider = () => {
         const { error: insertError } = await supabase
           .from("hero_slides")
           .insert({
-            media_type: isVideo ? "video" : "image",
-            media_url: publicUrl,
+            image_url: publicUrl,
             title: slide.title || null,
             subtitle: slide.subtitle || null,
             cta_text: slide.cta_text || null,
             cta_link: slide.cta_link || null,
-            display_order: slides.length + i,
-            is_active: true,
+            order_index: slides.length + i,
+            active: true,
           });
 
         if (insertError) throw insertError;
@@ -234,7 +230,7 @@ const HeroSlider = () => {
     try {
       const { error } = await supabase
         .from("hero_slides")
-        .update({ is_active: !currentStatus })
+        .update({ active: !currentStatus })
         .eq("id", id);
 
       if (error) throw error;
@@ -366,7 +362,7 @@ const HeroSlider = () => {
                 <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                   <Input
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*"
                     onChange={(e) => handleFileSelect(index, e)}
                     disabled={uploading}
                     className="hidden"
@@ -379,8 +375,6 @@ const HeroSlider = () => {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Images: WebP/JPG (max 2MB, 1920x1080px recommended)
-                      <br />
-                      Videos: MP4 (max 5MB, 10-15 seconds, muted autoplay)
                     </p>
                   </Label>
                 </div>
@@ -422,18 +416,14 @@ const HeroSlider = () => {
                   <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
                   
                   <div className="w-32 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
-                    {slide.media_type === "video" ? (
-                      <video src={slide.media_url} className="w-full h-full object-cover" />
-                    ) : (
-                      <img src={slide.media_url} alt={slide.title || ''} className="w-full h-full object-cover" />
-                    )}
+                    <img src={slide.image_url} alt={slide.title || ''} className="w-full h-full object-cover" />
                   </div>
 
                   <div className="flex-1">
                     <p className="font-semibold">{slide.title || "Untitled"}</p>
                     <p className="text-sm text-muted-foreground">{slide.subtitle || "No subtitle"}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {slide.media_type.toUpperCase()} • Order: {slide.display_order}
+                      Order: {slide.order_index}
                     </p>
                   </div>
 
@@ -442,15 +432,15 @@ const HeroSlider = () => {
                       <Label htmlFor={`active-${slide.id}`} className="text-sm">Active</Label>
                       <Switch
                         id={`active-${slide.id}`}
-                        checked={slide.is_active}
-                        onCheckedChange={() => toggleSlideActive(slide.id, slide.is_active)}
+                        checked={slide.active}
+                        onCheckedChange={() => toggleSlideActive(slide.id, slide.active)}
                       />
                     </div>
 
                     <Button
                       variant="destructive"
                       size="icon"
-                      onClick={() => deleteSlide(slide.id, slide.media_url)}
+                      onClick={() => deleteSlide(slide.id, slide.image_url)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

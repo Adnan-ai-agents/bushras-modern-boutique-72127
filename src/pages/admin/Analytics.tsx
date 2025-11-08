@@ -42,12 +42,12 @@ const Analytics = () => {
   };
 
   const fetchStats = async () => {
-    const { data: orders } = await supabase.from('orders').select('total_amount');
+    const { data: orders } = await supabase.from('orders').select('total');
     const { count: productsCount } = await supabase.from('products').select('*', { count: 'exact', head: true });
     const { count: customersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
 
     setStats({
-      totalRevenue: orders?.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) || 0,
+      totalRevenue: orders?.reduce((sum, order) => sum + Number(order.total || 0), 0) || 0,
       totalOrders: orders?.length || 0,
       totalProducts: productsCount || 0,
       totalCustomers: customersCount || 0,
@@ -57,7 +57,7 @@ const Analytics = () => {
   const fetchSalesData = async () => {
     const { data } = await supabase
       .from('orders')
-      .select('created_at, total_amount')
+      .select('created_at, total')
       .order('created_at', { ascending: true });
 
     if (data) {
@@ -66,7 +66,7 @@ const Analytics = () => {
         if (!acc[date]) {
           acc[date] = { date, revenue: 0, orders: 0 };
         }
-        acc[date].revenue += Number(order.total_amount || 0);
+        acc[date].revenue += Number(order.total || 0);
         acc[date].orders += 1;
         return acc;
       }, {});
@@ -76,23 +76,8 @@ const Analytics = () => {
   };
 
   const fetchTopProducts = async () => {
-    const { data } = await supabase
-      .from('order_items')
-      .select('product_id, quantity, products(name)')
-      .limit(100);
-
-    if (data) {
-      const productSales = data.reduce((acc: any, item) => {
-        const productName = (item.products as any)?.name || 'Unknown';
-        if (!acc[productName]) {
-          acc[productName] = { name: productName, sales: 0 };
-        }
-        acc[productName].sales += item.quantity;
-        return acc;
-      }, {});
-
-      setTopProducts(Object.values(productSales).sort((a: any, b: any) => b.sales - a.sales).slice(0, 5));
-    }
+    // Top products feature requires order_items table
+    setTopProducts([]);
   };
 
   const fetchOrderStatus = async () => {

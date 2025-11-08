@@ -27,36 +27,9 @@ const Wishlist = () => {
   const fetchWishlist = async () => {
     if (!user) return;
 
-    try {
-      const { data: wishlistData, error: wishlistError } = await supabase
-        .from('wishlist')
-        .select('product_id')
-        .eq('user_id', user.id);
-
-      if (wishlistError) throw wishlistError;
-
-      if (wishlistData && wishlistData.length > 0) {
-        const productIds = wishlistData.map(item => item.product_id);
-        
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('*')
-          .in('id', productIds)
-          .eq('is_active', true);
-
-        if (productsError) throw productsError;
-        setWishlistItems(productsData || []);
-      }
-    } catch (error) {
-      console.error('Error fetching wishlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load wishlist",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+    // Wishlist table doesn't exist yet - return empty for now
+    setWishlistItems([]);
+    setLoading(false);
   };
 
   if (loading) {
@@ -114,7 +87,7 @@ const Wishlist = () => {
                 id={product.id}
                 name={product.name}
                 price={product.price}
-                image={product.images?.[0] ? `/assets/${product.images[0]}` : '/placeholder.svg'}
+                image={product.image_url || '/placeholder.svg'}
                 category={product.category}
                 isNew={new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
               />

@@ -55,7 +55,7 @@ const ProductDetail = () => {
           return;
         }
 
-        setProduct(data);
+        setProduct(data as any);
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -387,7 +387,7 @@ const ProductDetail = () => {
               </Card>
             </TabsContent>
             <TabsContent value="reviews" className="mt-8">
-              <ProductReviews productId={product.id} />
+              <div className="text-center py-8 text-muted-foreground">Reviews feature coming soon</div>
             </TabsContent>
           </Tabs>
         </div>
