@@ -36,9 +36,7 @@ const Products = () => {
     try {
       let query = supabase
         .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_published', true);
+        .select('*');
 
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`);
@@ -246,7 +244,7 @@ const Products = () => {
                       id={product.id}
                       name={product.name}
                       price={product.price}
-                      image={Array.isArray(product.images) ? product.images : ['/placeholder.svg']}
+                      image={product.image_url ? [product.image_url] : ['/placeholder.svg']}
                       category={product.category}
                       isNew={new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
                     />

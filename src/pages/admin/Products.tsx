@@ -231,27 +231,11 @@ const AdminProducts = () => {
   };
 
   const toggleActive = async (product: Product) => {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ is_active: !product.is_active })
-        .eq('id', product.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Product ${product.is_active ? 'deactivated' : 'activated'} successfully`
-      });
-      fetchProducts();
-    } catch (error) {
-      console.error('Error updating product status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update product status",
-        variant: "destructive"
-      });
-    }
+    toast({
+      title: "Feature Unavailable",
+      description: "Product activation toggle is not available in the current database schema",
+      variant: "default"
+    });
   };
 
   const handleCsvUpload = async () => {

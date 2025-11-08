@@ -20,10 +20,8 @@ interface Product {
   description: string;
   price: number;
   category: string;
-  brand: string;
-  stock_quantity: number;
-  images: any;
-  is_active: boolean;
+  stock: number;
+  image_url: string;
   created_at: string;
 }
 
@@ -47,8 +45,7 @@ const ProductDetail = () => {
           .from('products')
           .select('*')
           .eq('id', slug)
-          .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching product:', error);
@@ -141,9 +138,7 @@ const ProductDetail = () => {
     );
   }
 
-  const productImages = product.images && Array.isArray(product.images) && product.images.length > 0 
-    ? product.images
-    : ['/placeholder.svg'];
+  const productImages = product.image_url ? [product.image_url] : ['/placeholder.svg'];
 
   const isNew = new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -203,7 +198,7 @@ const ProductDetail = () => {
               <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-2">
                 {product.name}
               </h1>
-              <p className="text-lg text-muted-foreground mb-4">{product.brand}</p>
+              <p className="text-lg text-muted-foreground mb-4">{product.category}</p>
               
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex text-yellow-400">
@@ -252,13 +247,13 @@ const ProductDetail = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                    disabled={quantity >= product.stock_quantity}
+                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                    disabled={quantity >= product.stock}
                   >
                     +
                   </Button>
                   <span className="text-sm text-muted-foreground ml-4">
-                    {product.stock_quantity} available
+                    {product.stock} available
                   </span>
                 </div>
               </div>
@@ -269,7 +264,7 @@ const ProductDetail = () => {
                   className="flex-1" 
                   size="lg"
                   onClick={handleBookOrder}
-                  disabled={product.stock_quantity === 0}
+                  disabled={product.stock === 0}
                 >
                   <MessageCircle className="h-5 w-5 mr-2" />
                   Book Order
@@ -278,7 +273,7 @@ const ProductDetail = () => {
                   variant="outline" 
                   size="lg"
                   onClick={handleAddToCart}
-                  disabled={product.stock_quantity === 0}
+                  disabled={product.stock === 0}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart
@@ -288,7 +283,7 @@ const ProductDetail = () => {
                 </Button>
               </div>
 
-              {product.stock_quantity === 0 && (
+              {product.stock === 0 && (
                 <p className="text-destructive text-sm">Out of stock</p>
               )}
             </div>
@@ -329,10 +324,6 @@ const ProductDetail = () => {
                   <span className="text-foreground">{product.category}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Brand:</span>
-                  <span className="text-foreground">{product.brand}</span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-muted-foreground">Material:</span>
                   <span className="text-foreground">Premium Quality Fabric</span>
                 </div>
@@ -368,10 +359,6 @@ const ProductDetail = () => {
                       <div>
                         <span className="text-sm text-muted-foreground">Category</span>
                         <p className="font-medium text-foreground">{product.category}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-muted-foreground">Brand</span>
-                        <p className="font-medium text-foreground">{product.brand}</p>
                       </div>
                       <div>
                         <span className="text-sm text-muted-foreground">Material</span>

@@ -52,131 +52,42 @@ const TeamManagement = () => {
 
   const fetchStaff = async () => {
     try {
-      const { data: staffData, error } = await supabase
-        .from('staff')
-        .select('*')
-        .order('hired_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Fetch profiles separately
-      const userIds = staffData?.map(s => s.user_id) || [];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, name, email')
-        .in('id', userIds);
-
-      // Merge staff and profiles
-      const mergedData = staffData?.map(staff => ({
-        ...staff,
-        profiles: profilesData?.find(p => p.id === staff.user_id)
-      })) || [];
-
-      setStaff(mergedData as StaffMember[]);
-    } catch (error: any) {
+      // Staff table doesn't exist - show empty state
+      setStaff([]);
       toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+        title: "Feature Unavailable",
+        description: "Staff management is not yet set up in the database",
+        variant: "default",
       });
+    } catch (error: any) {
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddStaff = async () => {
-    try {
-      // Find user by email
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', newStaff.email)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      if (!profile) {
-        toast({
-          title: "User not found",
-          description: "No user found with this email address",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('staff')
-        .insert({
-          user_id: profile.id,
-          department: newStaff.department,
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Staff member added successfully",
-      });
-
-      setDialogOpen(false);
-      setNewStaff({ email: "", department: "sales" });
-      fetchStaff();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Feature Unavailable",
+      description: "Staff management requires database setup",
+      variant: "default",
+    });
   };
 
   const handleToggleActive = async (staffId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('staff')
-        .update({ is_active: !currentStatus })
-        .eq('id', staffId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Staff status updated",
-      });
-
-      fetchStaff();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Feature Unavailable",
+      description: "Staff management requires database setup",
+      variant: "default",
+    });
   };
 
   const handleRemoveStaff = async (staffId: string) => {
-    if (!confirm("Are you sure you want to remove this staff member?")) return;
-
-    try {
-      const { error } = await supabase
-        .from('staff')
-        .delete()
-        .eq('id', staffId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Staff member removed",
-      });
-
-      fetchStaff();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Feature Unavailable",
+      description: "Staff management requires database setup",
+      variant: "default",
+    });
   };
 
   if (!user || !user.roles?.includes('admin')) {
