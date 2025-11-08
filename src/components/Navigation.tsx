@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Menu, X, User, Search, LogOut } from "lucide-react";
-import NotificationBell from "./NotificationBell";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
@@ -79,11 +78,9 @@ const Navigation = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="hover:bg-accent">
+          <Button variant="ghost" size="icon" className="hover:bg-accent">
               <Search className="h-5 w-5" />
             </Button>
-            
-            {user && <NotificationBell />}
             
             {user ? (
               <div className="flex items-center space-x-2">

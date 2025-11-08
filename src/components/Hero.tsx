@@ -15,13 +15,13 @@ import heroImage from "@/assets/hero-fashion.jpg";
 
 interface HeroSlide {
   id: string;
-  media_type: 'image' | 'video';
-  media_url: string;
+  image_url: string;
   title: string | null;
   subtitle: string | null;
   cta_text: string | null;
   cta_link: string | null;
-  display_order: number;
+  order_index: number;
+  active: boolean;
 }
 
 const Hero = () => {
@@ -48,8 +48,8 @@ const Hero = () => {
       const { data, error } = await supabase
         .from("hero_slides")
         .select("*")
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+        .eq("active", true)
+        .order("order_index", { ascending: true });
 
       if (error) throw error;
       if (data && data.length > 0) {
@@ -150,23 +150,12 @@ const Hero = () => {
 
                 {/* Media - Right Side */}
                 <div className="w-full md:w-1/2 h-[60vh] md:h-[85vh] relative">
-                  {slide.media_type === "video" ? (
-                    <video
-                      src={slide.media_url}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <img
-                      src={slide.media_url}
-                      alt={slide.title || "Hero slide"}
-                      className="w-full h-full object-contain"
-                      loading={index === 0 ? "eager" : "lazy"}
-                    />
-                  )}
+                  <img
+                    src={slide.image_url}
+                    alt={slide.title || "Hero slide"}
+                    className="w-full h-full object-contain"
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
                   <div
                     className="hidden md:block lg:hidden absolute inset-y-0 left-0 w-[10%] backdrop-blur-sm pointer-events-none"
                     aria-hidden="true"

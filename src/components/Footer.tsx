@@ -16,30 +16,14 @@ const Footer = () => {
     if (!email.trim()) return;
 
     setIsSubmitting(true);
-    try {
-      // Store newsletter subscription
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .insert([{ email: email.trim().toLowerCase() }]);
-
-      if (error && error.code !== '23505') { // Ignore duplicate email errors
-        throw error;
-      }
-
-      toast({
-        title: "Subscribed!",
-        description: "You'll receive our latest updates and exclusive offers.",
-      });
-      setEmail("");
-    } catch (error) {
-      toast({
-        title: "Subscription successful!",
-        description: "Thank you for subscribing to our newsletter.",
-      });
-      setEmail("");
-    } finally {
-      setIsSubmitting(false);
-    }
+    
+    // Show success message (newsletter table not configured)
+    toast({
+      title: "Thank you!",
+      description: "Newsletter subscription feature coming soon.",
+    });
+    setEmail("");
+    setIsSubmitting(false);
   };
 
   return (
