@@ -44,7 +44,7 @@ useEffect(() => {
   if (user) {
     const roles = user.roles || [];
     const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    const redirectTo = isAdmin ? '/admin/dashboard' : from;
+    const redirectTo = isAdmin ? '/admin' : from;
     navigate(redirectTo, { replace: true });
   }
 }, [initialized, user, navigate, from]);
