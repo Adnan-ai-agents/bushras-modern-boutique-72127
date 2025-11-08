@@ -147,10 +147,11 @@ useEffect(() => {
     setIsLoading(true);
     
     try {
+      const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${redirectUrl}/auth`,
         },
       });
 
@@ -166,10 +167,11 @@ useEffect(() => {
     setIsLoading(true);
     
     try {
+      const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${redirectUrl}/auth`,
         },
       });
 

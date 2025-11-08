@@ -13,7 +13,8 @@ export interface AuthUser extends User {
 
 export const authService = {
   async signUp(email: string, password: string, name: string) {
-    const redirectUrl = `${getAppUrl()}/`;
+    const subdomain = import.meta.env.VITE_SUBDOMAIN;
+    const redirectUrl = subdomain || `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
       email,
