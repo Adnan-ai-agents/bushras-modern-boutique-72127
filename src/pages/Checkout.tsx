@@ -96,9 +96,7 @@ const Checkout = () => {
         .from('order_items')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
-
-      clearCart();
+    clearCart();
       
       toast({
         title: "Order Placed Successfully!",
