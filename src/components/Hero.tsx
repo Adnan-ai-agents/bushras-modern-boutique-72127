@@ -15,7 +15,9 @@ import heroImage from "@/assets/hero-fashion.jpg";
 
 interface HeroSlide {
   id: string;
-  image_url: string;
+  image_url?: string;
+  image?: string;
+  media_url?: string;
   title: string | null;
   subtitle: string | null;
   cta_text: string | null;
@@ -47,7 +49,7 @@ const Hero = () => {
     try {
       const { data, error } = await supabase
         .from("hero_slides")
-        .select("id, image_url, title, subtitle, cta_text, cta_link, order_index, is_active")
+        .select("*")
         .eq("is_active", true)
         .order("order_index", { ascending: true });
 
@@ -151,7 +153,7 @@ const Hero = () => {
                 {/* Media - Right Side */}
                 <div className="w-full md:w-1/2 h-[60vh] md:h-[85vh] relative">
                   <img
-                    src={slide.image_url}
+                    src={(slide as any).image_url || (slide as any).image || (slide as any).media_url || heroImage}
                     alt={slide.title || "Hero slide"}
                     className="w-full h-full object-contain"
                     loading={index === 0 ? "eager" : "lazy"}

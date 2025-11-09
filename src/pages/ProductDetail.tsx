@@ -21,7 +21,8 @@ interface Product {
   price: number;
   category: string;
   stock: number;
-  image_url: string;
+  images?: string[];
+  image_url?: string | null;
   created_at: string;
 }
 
@@ -138,7 +139,9 @@ const ProductDetail = () => {
     );
   }
 
-  const productImages = product.image_url ? [product.image_url] : ['/placeholder.svg'];
+  const productImages = Array.isArray((product as any).images) && (product as any).images.length > 0 
+    ? ((product as any).images as string[])
+    : ((product as any).image_url ? [((product as any).image_url as string)] : ['/placeholder.svg']);
 
   const isNew = new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -247,13 +250,13 @@ const ProductDetail = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    disabled={quantity >= product.stock}
+                    onClick={() => setQuantity(Math.min(((product as any).stock ?? (product as any).stock_quantity ?? 0), quantity + 1))}
+                    disabled={quantity >= ((product as any).stock ?? (product as any).stock_quantity ?? 0)}
                   >
                     +
                   </Button>
                   <span className="text-sm text-muted-foreground ml-4">
-                    {product.stock} available
+                    {((product as any).stock ?? (product as any).stock_quantity ?? 0)} available
                   </span>
                 </div>
               </div>

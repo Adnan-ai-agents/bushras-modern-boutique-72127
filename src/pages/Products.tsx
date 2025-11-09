@@ -244,7 +244,7 @@ const Products = () => {
                       id={product.id}
                       name={product.name}
                       price={product.price}
-                      image={product.image_url ? [product.image_url] : ['/placeholder.svg']}
+                      image={Array.isArray(product.images) && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : ['/placeholder.svg'])}
                       category={product.category}
                       isNew={new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
                     />
