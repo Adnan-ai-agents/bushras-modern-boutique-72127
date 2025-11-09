@@ -21,7 +21,7 @@ interface HeroSlide {
   cta_text: string | null;
   cta_link: string | null;
   order_index: number;
-  active: boolean;
+  is_active: boolean;
 }
 
 const Hero = () => {
@@ -45,15 +45,15 @@ const Hero = () => {
 
   const fetchSlides = async () => {
     try {
-      const { data, error } = await supabase
-        .from("hero_slides")
-        .select("*")
-        .eq("active", true)
+      const { data, error } = await (supabase
+        .from("hero_slides") as any)
+        .select("id, image_url, title, subtitle, cta_text, cta_link, order_index, is_active")
+        .eq("is_active", true)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
       if (data && data.length > 0) {
-        setSlides(data as HeroSlide[]);
+        setSlides(data);
       }
     } catch (error) {
       console.error("Error fetching slides:", error);

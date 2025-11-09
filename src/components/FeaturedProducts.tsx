@@ -18,10 +18,10 @@ const FeaturedProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('featured', true)
+        const { data, error } = await (supabase
+          .from('products') as any)
+          .select('id, name, price, images, category, created_at, is_featured')
+          .eq('is_featured', true)
           .order('created_at', { ascending: false })
           .limit(6);
 
@@ -30,7 +30,7 @@ const FeaturedProducts = () => {
           return;
         }
 
-        setProducts((data as any) || []);
+        setProducts(data || []);
       } catch (error) {
         console.error('Error:', error);
       } finally {

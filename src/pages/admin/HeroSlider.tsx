@@ -18,7 +18,7 @@ interface HeroSlide {
   cta_text: string | null;
   cta_link: string | null;
   order_index: number;
-  active: boolean;
+  is_active: boolean;
 }
 
 interface NewSlideForm {
@@ -94,7 +94,7 @@ const HeroSlider = () => {
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setSlides(data || []);
+      setSlides((data as any) || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -201,8 +201,8 @@ const HeroSlider = () => {
             cta_text: slide.cta_text || null,
             cta_link: slide.cta_link || null,
             order_index: slides.length + i,
-            active: true,
-          });
+            is_active: true,
+          } as any);
 
         if (insertError) throw insertError;
       }
@@ -230,7 +230,7 @@ const HeroSlider = () => {
     try {
       const { error } = await supabase
         .from("hero_slides")
-        .update({ active: !currentStatus })
+        .update({ is_active: !currentStatus } as any)
         .eq("id", id);
 
       if (error) throw error;
@@ -432,8 +432,8 @@ const HeroSlider = () => {
                       <Label htmlFor={`active-${slide.id}`} className="text-sm">Active</Label>
                       <Switch
                         id={`active-${slide.id}`}
-                        checked={slide.active}
-                        onCheckedChange={() => toggleSlideActive(slide.id, slide.active)}
+                        checked={slide.is_active}
+                        onCheckedChange={() => toggleSlideActive(slide.id, slide.is_active)}
                       />
                     </div>
 
