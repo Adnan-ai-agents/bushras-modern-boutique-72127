@@ -16,36 +16,36 @@ export type Database = {
     Tables: {
       hero_slides: {
         Row: {
-          active: boolean | null
           created_at: string
           cta_link: string | null
           cta_text: string | null
           id: string
           image_url: string
+          is_active: boolean | null
           order_index: number | null
           subtitle: string | null
           title: string
           updated_at: string
         }
         Insert: {
-          active?: boolean | null
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
           id?: string
           image_url: string
+          is_active?: boolean | null
           order_index?: number | null
           subtitle?: string | null
           title: string
           updated_at?: string
         }
         Update: {
-          active?: boolean | null
           created_at?: string
           cta_link?: string | null
           cta_text?: string | null
           id?: string
           image_url?: string
+          is_active?: boolean | null
           order_index?: number | null
           subtitle?: string | null
           title?: string
@@ -91,9 +91,9 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
-          featured: boolean | null
           id: string
           image_url: string | null
+          is_featured: boolean | null
           name: string
           price: number
           stock: number | null
@@ -103,9 +103,9 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
-          featured?: boolean | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           name: string
           price: number
           stock?: number | null
@@ -115,9 +115,9 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
-          featured?: boolean | null
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           name?: string
           price?: number
           stock?: number | null

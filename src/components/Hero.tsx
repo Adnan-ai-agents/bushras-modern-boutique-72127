@@ -45,8 +45,8 @@ const Hero = () => {
 
   const fetchSlides = async () => {
     try {
-      const { data, error } = await (supabase
-        .from("hero_slides") as any)
+      const { data, error } = await supabase
+        .from("hero_slides")
         .select("id, image_url, title, subtitle, cta_text, cta_link, order_index, is_active")
         .eq("is_active", true)
         .order("order_index", { ascending: true });

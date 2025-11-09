@@ -94,7 +94,7 @@ const HeroSlider = () => {
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setSlides((data as any) || []);
+      setSlides(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -202,7 +202,7 @@ const HeroSlider = () => {
             cta_link: slide.cta_link || null,
             order_index: slides.length + i,
             is_active: true,
-          } as any);
+          });
 
         if (insertError) throw insertError;
       }
@@ -230,7 +230,7 @@ const HeroSlider = () => {
     try {
       const { error } = await supabase
         .from("hero_slides")
-        .update({ is_active: !currentStatus } as any)
+        .update({ is_active: !currentStatus })
         .eq("id", id);
 
       if (error) throw error;
