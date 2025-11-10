@@ -20,7 +20,7 @@ const FeaturedProducts = () => {
       try {
         const { data, error } = await supabase
           .from('products')
-          .select('id, name, price, images, category, created_at, is_featured')
+          .select('id, name, price, image_url, category, created_at, is_featured')
           .eq('is_featured', true)
           .order('created_at', { ascending: false })
           .limit(6);
@@ -84,7 +84,7 @@ const FeaturedProducts = () => {
                   id={product.id}
                   name={product.name}
                   price={product.price}
-                  image={Array.isArray(product.images) && product.images.length > 0 ? product.images : ['/placeholder.svg']}
+                  image={product.image_url || '/placeholder.svg'}
                   category={product.category || 'Fashion'}
                   isNew={product.created_at && new Date(product.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
                 />
