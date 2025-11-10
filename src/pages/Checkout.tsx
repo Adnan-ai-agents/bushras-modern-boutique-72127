@@ -11,6 +11,41 @@ import { ArrowLeft, MessageCircle, Truck, Package } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+// Validation schema for shipping information
+const shippingSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
+  phone: z.string()
+    .trim()
+    .regex(/^(\+92|0)?[0-9]{10,11}$/, "Invalid phone number. Use format: 03001234567 or +923001234567")
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number must be less than 15 digits"),
+  address: z.string()
+    .trim()
+    .min(10, "Address must be at least 10 characters")
+    .max(500, "Address must be less than 500 characters"),
+  city: z.string()
+    .trim()
+    .min(2, "City name must be at least 2 characters")
+    .max(100, "City name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s]+$/, "City can only contain letters and spaces"),
+  postalCode: z.string()
+    .trim()
+    .max(10, "Postal code must be less than 10 characters")
+    .regex(/^[0-9]{0,10}$/, "Postal code can only contain numbers")
+    .optional()
+    .or(z.literal('')),
+  notes: z.string()
+    .trim()
+    .max(1000, "Notes must be less than 1000 characters")
+    .optional()
+    .or(z.literal(''))
+});
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -29,19 +64,40 @@ const Checkout = () => {
     notes: ''
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setShippingInfo({ ...shippingInfo, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setShippingInfo({ ...shippingInfo, [name]: value });
+    
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
   };
 
   const handleContactWhatsApp = () => {
-    if (!shippingInfo.name || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.city) {
+    // Validate all fields
+    const validation = shippingSchema.safeParse(shippingInfo);
+    
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.issues.forEach((issue) => {
+        if (issue.path[0]) {
+          fieldErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive"
       });
       return;
     }
+    
+    setErrors({});
 
     // Create WhatsApp message with order details
     const orderDetails = items.map(item => 
@@ -111,33 +167,82 @@ const Checkout = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>
-                    <Input id="name" name="name" value={shippingInfo.name} onChange={handleInputChange} required />
+                    <Input 
+                      id="name" 
+                      name="name" 
+                      value={shippingInfo.name} 
+                      onChange={handleInputChange} 
+                      className={errors.name ? "border-destructive" : ""}
+                      required 
+                    />
+                    {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number *</Label>
-                    <Input id="phone" name="phone" value={shippingInfo.phone} onChange={handleInputChange} required />
+                    <Input 
+                      id="phone" 
+                      name="phone" 
+                      value={shippingInfo.phone} 
+                      onChange={handleInputChange}
+                      placeholder="03001234567"
+                      className={errors.phone ? "border-destructive" : ""}
+                      required 
+                    />
+                    {errors.phone && <p className="text-sm text-destructive mt-1">{errors.phone}</p>}
                   </div>
                 </div>
                 
                 <div>
                   <Label htmlFor="address">Complete Address *</Label>
-                  <Textarea id="address" name="address" value={shippingInfo.address} onChange={handleInputChange} required />
+                  <Textarea 
+                    id="address" 
+                    name="address" 
+                    value={shippingInfo.address} 
+                    onChange={handleInputChange}
+                    className={errors.address ? "border-destructive" : ""}
+                    required 
+                  />
+                  {errors.address && <p className="text-sm text-destructive mt-1">{errors.address}</p>}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="city">City *</Label>
-                    <Input id="city" name="city" value={shippingInfo.city} onChange={handleInputChange} required />
+                    <Input 
+                      id="city" 
+                      name="city" 
+                      value={shippingInfo.city} 
+                      onChange={handleInputChange}
+                      className={errors.city ? "border-destructive" : ""}
+                      required 
+                    />
+                    {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
                   </div>
                   <div>
                     <Label htmlFor="postalCode">Postal Code</Label>
-                    <Input id="postalCode" name="postalCode" value={shippingInfo.postalCode} onChange={handleInputChange} />
+                    <Input 
+                      id="postalCode" 
+                      name="postalCode" 
+                      value={shippingInfo.postalCode} 
+                      onChange={handleInputChange}
+                      placeholder="54000"
+                      className={errors.postalCode ? "border-destructive" : ""}
+                    />
+                    {errors.postalCode && <p className="text-sm text-destructive mt-1">{errors.postalCode}</p>}
                   </div>
                 </div>
                 
                 <div>
                   <Label htmlFor="notes">Order Notes (Optional)</Label>
-                  <Textarea id="notes" name="notes" value={shippingInfo.notes} onChange={handleInputChange} placeholder="Any special instructions?" />
+                  <Textarea 
+                    id="notes" 
+                    name="notes" 
+                    value={shippingInfo.notes} 
+                    onChange={handleInputChange} 
+                    placeholder="Any special instructions?"
+                    className={errors.notes ? "border-destructive" : ""}
+                  />
+                  {errors.notes && <p className="text-sm text-destructive mt-1">{errors.notes}</p>}
                 </div>
 
                 <div className="pt-4 border-t">
