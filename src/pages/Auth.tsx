@@ -30,8 +30,12 @@ const signUpSchema = z.object({
 });
 
 const Auth = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+const [isSigningIn, setIsSigningIn] = useState(false);
+const [isSigningUp, setIsSigningUp] = useState(false);
+const [isSocialLoading, setIsSocialLoading] = useState(false);
+const [error, setError] = useState<string>("");
+const [signInErrors, setSignInErrors] = useState<{email?: string; password?: string}>({});
+const [signUpErrors, setSignUpErrors] = useState<{name?: string; email?: string; password?: string; confirmPassword?: string}>({});
 const navigate = useNavigate();
 const { toast } = useToast();
 const { user, initialized } = useAuthStore();
@@ -61,126 +65,147 @@ useEffect(() => {
     confirmPassword: "",
   });
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    try {
-      const validatedData = signInSchema.parse(signInForm);
-      setIsLoading(true);
+const handleSignIn = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setSignInErrors({});
+  try {
+    const validatedData = signInSchema.parse(signInForm);
+    setIsSigningIn(true);
 
-      const { data, error } = await authService.signIn(
-        validatedData.email,
-        validatedData.password
-      );
+    const { data, error } = await authService.signIn(
+      validatedData.email,
+      validatedData.password
+    );
 
-      if (error) {
-        setError(error.message);
-        return;
-      }
-
-      if (data.user) {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        });
-        // Auth store will handle redirect via useEffect
-      }
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
-      } else {
-        setError("An error occurred. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
+    if (error) {
+      const msg = error.message || "Failed to sign in";
+      const friendly =
+        msg.includes("Invalid login credentials")
+          ? "Incorrect email or password."
+          : msg.includes("Email not confirmed")
+          ? "Please verify your email to continue."
+          : msg;
+      setError(friendly);
+      return;
     }
-  };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    try {
-      const validatedData = signUpSchema.parse(signUpForm);
-      setIsLoading(true);
-
-      const { data, error } = await authService.signUp(
-        validatedData.email,
-        validatedData.password,
-        validatedData.name
-      );
-
-      if (error) {
-        setError(error.message);
-        return;
-      }
-
-      if (data.user) {
-        toast({
-          title: "Check your email!",
-          description: `We've sent a confirmation link to ${validatedData.email}. Please check your inbox and click the link to verify your account.`,
-          duration: 6000,
-        });
-        
-        // Clear form
-        setSignUpForm({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-      }
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
-      } else {
-        setError("An error occurred. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setError("");
-    setIsLoading(true);
-    
-    try {
-      const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-        },
+    if (data.user) {
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
       });
-
-      if (error) throw error;
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in with Google");
-      setIsLoading(false);
     }
-  };
-
-  const handleFacebookSignIn = async () => {
-    setError("");
-    setIsLoading(true);
-    
-    try {
-      const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: {
-          redirectTo: redirectUrl,
-        },
+  } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      const fieldErrors: any = {};
+      err.issues.forEach((i) => {
+        if (i.path?.[0]) fieldErrors[i.path[0]] = i.message;
       });
-
-      if (error) throw error;
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in with Facebook");
-      setIsLoading(false);
+      setSignInErrors(fieldErrors);
+      setError("Please fix the highlighted fields.");
+    } else {
+      setError("An unexpected error occurred. Please try again.");
     }
-  };
+  } finally {
+    setIsSigningIn(false);
+  }
+};
+
+const handleSignUp = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setSignUpErrors({});
+  try {
+    const validatedData = signUpSchema.parse(signUpForm);
+    setIsSigningUp(true);
+
+    const { data, error } = await authService.signUp(
+      validatedData.email,
+      validatedData.password,
+      validatedData.name
+    );
+
+    if (error) {
+      const msg = error.message || "Failed to create account";
+      setError(msg);
+      return;
+    }
+
+    if (data.user) {
+      toast({
+        title: "Account created!",
+        description: "You're all set. Redirecting...",
+      });
+      // Clear form
+      setSignUpForm({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+    }
+  } catch (err: any) {
+    if (err instanceof z.ZodError) {
+      const fieldErrors: any = {};
+      err.issues.forEach((i) => {
+        if (i.path?.[0]) fieldErrors[i.path[0]] = i.message;
+      });
+      setSignUpErrors(fieldErrors);
+      setError("Please fix the highlighted fields.");
+    } else {
+      setError("An unexpected error occurred. Please try again.");
+    }
+  } finally {
+    setIsSigningUp(false);
+  }
+};
+
+const handleGoogleSignIn = async () => {
+  setError("");
+  setIsSocialLoading(true);
+  
+  try {
+    const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+      },
+    });
+
+    if (error) throw error;
+  } catch (err: any) {
+    const msg = err?.message || "Failed to sign in with Google";
+    const friendly = msg.includes("redirect_uri_mismatch")
+      ? "Google sign-in misconfiguration: add Authorized redirect URI https://htywmazgmcqwwwjvcigw.supabase.co/auth/v1/callback and include your app URLs under Authorized JavaScript origins."
+      : msg;
+    setError(friendly);
+  } finally {
+    setIsSocialLoading(false);
+  }
+};
+
+const handleFacebookSignIn = async () => {
+  setError("");
+  setIsSocialLoading(true);
+  
+  try {
+    const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: redirectUrl,
+      },
+    });
+
+    if (error) throw error;
+  } catch (err: any) {
+    setError(err?.message || "Failed to sign in with Facebook");
+  } finally {
+    setIsSocialLoading(false);
+  }
+};
 
 // Social auth rendering: Google is always available when enabled in Cloud.
 const googleEnabled = true;
@@ -225,41 +250,51 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      value={signInForm.email}
-                      onChange={(e) =>
-                        setSignInForm({ ...signInForm, email: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      value={signInForm.password}
-                      onChange={(e) =>
-                        setSignInForm({ ...signInForm, password: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
+<div className="space-y-2">
+  <Label htmlFor="signin-email">Email</Label>
+  <Input
+    id="signin-email"
+    type="email"
+    value={signInForm.email}
+    onChange={(e) =>
+      setSignInForm({ ...signInForm, email: e.target.value })
+    }
+    disabled={isSigningIn || isSocialLoading}
+    required
+    aria-invalid={!!signInErrors.email}
+  />
+  {signInErrors.email && (
+    <p className="text-sm text-destructive">{signInErrors.email}</p>
+  )}
+</div>
+<div className="space-y-2">
+  <Label htmlFor="signin-password">Password</Label>
+  <Input
+    id="signin-password"
+    type="password"
+    value={signInForm.password}
+    onChange={(e) =>
+      setSignInForm({ ...signInForm, password: e.target.value })
+    }
+    disabled={isSigningIn || isSocialLoading}
+    required
+    aria-invalid={!!signInErrors.password}
+  />
+  {signInErrors.password && (
+    <p className="text-sm text-destructive">{signInErrors.password}</p>
+  )}
+</div>
+{error && (
+  <Alert variant="destructive" role="alert" aria-live="polite">
+    <AlertDescription>{error.includes('redirect_uri_mismatch') ? 'Google sign-in misconfiguration detected. Please verify OAuth settings.' : error}</AlertDescription>
+  </Alert>
+)}
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Sign In
-                  </Button>
+<Button type="submit" className="w-full" disabled={isSigningIn || isSocialLoading}>
+  {isSigningIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+  Sign In
+</Button>
                   
                   {(googleEnabled || facebookEnabled) && (
                     <>
@@ -271,12 +306,12 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                       
                       <div className="grid grid-cols-2 gap-3">
                         {googleEnabled && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleGoogleSignIn}
-                            disabled={isLoading}
-                          >
+<Button
+  type="button"
+  variant="outline"
+  onClick={handleGoogleSignIn}
+  disabled={isSocialLoading || isSigningIn || isSigningUp}
+>
                             <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
                               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                               <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -287,19 +322,19 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                           </Button>
                         )}
                         
-                        {facebookEnabled && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleFacebookSignIn}
-                            disabled={isLoading}
-                          >
-                            <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
-                            Facebook
-                          </Button>
-                        )}
+{facebookEnabled && (
+  <Button
+    type="button"
+    variant="outline"
+    onClick={handleFacebookSignIn}
+    disabled={isSocialLoading || isSigningIn || isSigningUp}
+  >
+    <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+    </svg>
+    Facebook
+  </Button>
+)}
                       </div>
                     </>
                   )}
@@ -379,10 +414,10 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                   )}
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Account
-                  </Button>
+<Button type="submit" className="w-full" disabled={isSigningUp || isSocialLoading}>
+  {isSigningUp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+  Create Account
+</Button>
                   
                   {(googleEnabled || facebookEnabled) && (
                     <>
@@ -394,20 +429,20 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                       
                       <div className="grid grid-cols-2 gap-3">
                         {googleEnabled && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={handleGoogleSignIn}
-                            disabled={isLoading}
-                          >
-                            <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
-                              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                            </svg>
-                            Google
-                          </Button>
+<Button
+  type="button"
+  variant="outline"
+  onClick={handleGoogleSignIn}
+  disabled={isSocialLoading || isSigningIn || isSigningUp}
+>
+  <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+  Google
+</Button>
                         )}
                         
                         {facebookEnabled && (
