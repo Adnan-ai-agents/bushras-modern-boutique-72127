@@ -39,7 +39,13 @@ export const useAuthStore = create<AuthState>()(
               set({ session });
               
               if (session?.user) {
-                // Defer profile and roles fetching to avoid blocking
+                // Set user immediately for faster redirects
+                set({ 
+                  user: session.user as AuthUser,
+                  loading: false 
+                });
+                
+                // Then fetch profile and roles asynchronously
                 setTimeout(async () => {
                   try {
                     const { data: profile } = await supabase
@@ -55,20 +61,16 @@ export const useAuthStore = create<AuthState>()(
                     
                     const roles = userRoles?.map(r => r.role) || [];
                     
+                    // Update with full profile and roles
                     set({ 
                       user: { 
                         ...session.user, 
                         profile,
                         roles
-                      } as AuthUser,
-                      loading: false 
+                      } as AuthUser
                     });
                   } catch (error) {
                     console.error('Error fetching profile:', error);
-                    set({ 
-                      user: session.user as AuthUser,
-                      loading: false 
-                    });
                   }
                 }, 0);
               } else {
