@@ -207,8 +207,8 @@ const handleFacebookSignIn = async () => {
   }
 };
 
-// Social auth rendering: Google is always available when enabled in Cloud.
-const googleEnabled = true;
+// Social auth rendering: Google temporarily disabled for testing
+const googleEnabled = false;
 const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
 
   return (
@@ -304,7 +304,7 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                         <Separator className="flex-1" />
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="flex justify-center gap-3">
                         {googleEnabled && (
 <Button
   type="button"
@@ -427,7 +427,7 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                           <Separator className="flex-1" />
                         </div>
                       
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="flex justify-center gap-3">
                         {googleEnabled && (
 <Button
   type="button"
