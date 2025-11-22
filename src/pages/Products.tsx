@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import { ProductGridSkeleton } from "@/components/skeletons/ProductCardSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +13,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { getErrorMessage } from "@/utils/errors";
+import { useToast } from "@/hooks/use-toast";
 
 const Products = () => {
+  const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +67,11 @@ const Products = () => {
       }
     } catch (error) {
       console.error('Error fetching products:', error);
+      toast({
+        title: "Error",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -215,15 +224,7 @@ const Products = () => {
 
           <div className="lg:col-span-3">
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="animate-pulse">
-                    <div className="aspect-square bg-muted rounded-2xl mb-4"></div>
-                    <div className="h-4 bg-muted rounded mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-3/4"></div>
-                  </div>
-                ))}
-              </div>
+              <ProductGridSkeleton count={9} />
             ) : products.length === 0 ? (
               <div className="text-center py-20">
                 <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
