@@ -2,12 +2,13 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom";
 import Profile from "./pages/Profile";
 import Promotions from "./pages/admin/Promotions";
 import { useAuthStore } from "@/store/auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { queryClient } from "@/lib/queryClient";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import About from "./pages/About";
@@ -30,8 +31,6 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AdminPermissionManagement from "./pages/admin/PermissionManagement";
 import AdminPaymentMethods from "./pages/admin/PaymentMethods";
-
-const queryClient = new QueryClient();
 
 const App = () => {
   const initialize = useAuthStore((state) => state.initialize);
