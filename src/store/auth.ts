@@ -34,50 +34,42 @@ export const useAuthStore = create<AuthState>()(
         
         try {
           // Set up auth state listener
-          supabase.auth.onAuthStateChange(
-            async (event, session) => {
-              set({ session });
-              
-              if (session?.user) {
-                // Set user immediately for faster redirects
-                set({ 
-                  user: session.user as AuthUser,
-                  loading: false 
-                });
-                
-                // Then fetch profile and roles asynchronously
-                setTimeout(async () => {
-                  try {
-                    const { data: profile } = await supabase
-                      .from('profiles')
-                      .select('*')
-                      .eq('id', session.user.id)
-                      .maybeSingle();
-                    
-                    const { data: userRoles } = await supabase
-                      .from('user_roles')
-                      .select('role')
-                      .eq('user_id', session.user.id);
-                    
-                    const roles = userRoles?.map(r => r.role) || [];
-                    
-                    // Update with full profile and roles
-                    set({ 
-                      user: { 
-                        ...session.user, 
-                        profile,
-                        roles
-                      } as AuthUser
-                    });
-                  } catch (error) {
-                    console.error('Error fetching profile:', error);
-                  }
-                }, 0);
-              } else {
-                set({ user: null, loading: false });
-              }
+          supabase.auth.onAuthStateChange((event, session) => {
+            set({ session, loading: false });
+            
+            if (session?.user) {
+              // Fetch profile and roles after state change
+              setTimeout(async () => {
+                try {
+                  const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+                  
+                  const { data: userRoles } = await supabase
+                    .from('user_roles')
+                    .select('role')
+                    .eq('user_id', session.user.id);
+                  
+                  const roles = userRoles?.map(r => r.role) || [];
+                  
+                  set({ 
+                    user: { 
+                      ...session.user, 
+                      profile,
+                      roles
+                    } as AuthUser
+                  });
+                } catch (error) {
+                  console.error('Error fetching profile:', error);
+                  set({ user: session.user as AuthUser });
+                }
+              }, 0);
+            } else {
+              set({ user: null });
             }
-          );
+          });
 
           // Check for existing session
           const { data: { session } } = await supabase.auth.getSession();
