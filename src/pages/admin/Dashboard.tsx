@@ -237,6 +237,24 @@ const AdminDashboard = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Methods</CardTitle>
+                <CardDescription>
+                  Configure payment options for customers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => navigate('/admin/payment-methods')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Manage Payments
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

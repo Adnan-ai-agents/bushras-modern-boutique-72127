@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MessageCircle, Truck, Package } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ArrowLeft, MessageCircle, Truck, Package, Loader2 } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { paymentService, PaymentMethod } from "@/services/paymentService";
+import { supabase } from "@/integrations/supabase/client";
 
 // Validation schema for shipping information
 const shippingSchema = z.object({
@@ -54,6 +57,9 @@ const Checkout = () => {
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(true);
   
   const [shippingInfo, setShippingInfo] = useState({
     name: user?.profile?.name || '',
@@ -66,6 +72,20 @@ const Checkout = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    loadPaymentMethods();
+  }, []);
+
+  const loadPaymentMethods = async () => {
+    setLoadingPaymentMethods(true);
+    const methods = await paymentService.getActivePaymentMethods();
+    setPaymentMethods(methods);
+    if (methods.length > 0) {
+      setSelectedPaymentMethod(methods[0].id);
+    }
+    setLoadingPaymentMethods(false);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setShippingInfo({ ...shippingInfo, [name]: value });
@@ -76,7 +96,7 @@ const Checkout = () => {
     }
   };
 
-  const handleContactWhatsApp = () => {
+  const handlePlaceOrder = async () => {
     // Validate all fields
     const validation = shippingSchema.safeParse(shippingInfo);
     
@@ -96,36 +116,64 @@ const Checkout = () => {
       });
       return;
     }
+
+    if (!selectedPaymentMethod) {
+      toast({
+        title: "Payment Method Required",
+        description: "Please select a payment method",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setErrors({});
+    setIsSubmitting(true);
 
-    // Create WhatsApp message with order details
-    const orderDetails = items.map(item => 
-      `${item.name} x${item.quantity} - PKR ${(item.price * item.quantity).toLocaleString()}`
-    ).join('\n');
+    try {
+      const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethod);
+      
+      // Create order in database
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          user_id: user?.id || null,
+          total: getTotalPrice(),
+          items: JSON.parse(JSON.stringify(items)),
+          shipping_address: JSON.parse(JSON.stringify(shippingInfo)),
+          status: 'pending',
+          payment_method_id: selectedPaymentMethod,
+          payment_status: selectedMethod?.type === 'manual' ? 'pending_payment' : 
+                         selectedMethod?.type === 'offline' ? 'pending_verification' : 'pending'
+        }])
+        .select()
+        .single();
 
-    const message = `🛍️ *New Order Request*\n\n` +
-      `*Customer Details:*\n` +
-      `Name: ${shippingInfo.name}\n` +
-      `Phone: ${shippingInfo.phone}\n` +
-      `Address: ${shippingInfo.address}\n` +
-      `City: ${shippingInfo.city}\n` +
-      `Postal Code: ${shippingInfo.postalCode || 'N/A'}\n\n` +
-      `*Order Items:*\n${orderDetails}\n\n` +
-      `*Total Amount: PKR ${getTotalPrice().toLocaleString()}*\n\n` +
-      `${shippingInfo.notes ? `*Notes:* ${shippingInfo.notes}\n\n` : ''}` +
-      `Please confirm my order and provide payment details.`;
+      if (orderError) throw orderError;
 
-    // Replace with your actual WhatsApp number (without + symbol)
-    const whatsappNumber = '923001234567'; // Update this number
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    
-    window.open(whatsappUrl, '_blank');
-    
-    toast({
-      title: "Opening WhatsApp",
-      description: "Your order details have been prepared. Complete your order on WhatsApp!"
-    });
+      // Show success message with payment instructions
+      const instructions = selectedMethod?.instructions || 
+        'Your order has been placed successfully. We will contact you shortly.';
+
+      toast({
+        title: "Order Placed Successfully!",
+        description: `Order #${order.id.slice(0, 8)} - ${instructions}`,
+      });
+
+      // Clear cart
+      clearCart();
+
+      // Redirect to orders page or success page
+      navigate('/orders');
+    } catch (error: any) {
+      console.error('Error placing order:', error);
+      toast({
+        title: "Order Failed",
+        description: "Failed to place order. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (items.length === 0) {
@@ -246,26 +294,46 @@ const Checkout = () => {
                 </div>
 
                 <div className="pt-4 border-t">
-                  <div className="bg-accent/20 p-4 rounded-lg mb-4">
-                    <div className="flex items-start gap-3">
-                      <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-semibold text-foreground mb-1">Order via WhatsApp</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Click the button below to send your order details directly to our WhatsApp. 
-                          We'll confirm your order and provide payment instructions.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <h3 className="font-semibold text-foreground mb-3">Payment Method</h3>
                   
+                  {loadingPaymentMethods ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  ) : paymentMethods.length === 0 ? (
+                    <div className="bg-accent/20 p-4 rounded-lg mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        Please contact us to complete your order. We'll provide payment instructions.
+                      </p>
+                    </div>
+                  ) : (
+                    <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
+                      <div className="space-y-3">
+                        {paymentMethods.map((method) => (
+                          <div key={method.id} className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-accent/20 transition-colors">
+                            <RadioGroupItem value={method.id} id={method.id} className="mt-1" />
+                            <div className="flex-1">
+                              <Label htmlFor={method.id} className="cursor-pointer">
+                                <div className="font-semibold text-foreground">{method.name}</div>
+                                {method.instructions && (
+                                  <p className="text-sm text-muted-foreground mt-1">{method.instructions}</p>
+                                )}
+                              </Label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </RadioGroup>
+                  )}
+
                   <Button 
-                    className="w-full" 
+                    className="w-full mt-4" 
                     size="lg" 
-                    onClick={handleContactWhatsApp}
+                    onClick={handlePlaceOrder}
+                    disabled={isSubmitting || paymentMethods.length === 0}
                   >
-                    <MessageCircle className="h-5 w-5 mr-2" />
-                    Contact on WhatsApp for Order & Payment
+                    {isSubmitting && <Loader2 className="h-5 w-5 mr-2 animate-spin" />}
+                    {isSubmitting ? 'Placing Order...' : 'Place Order'}
                   </Button>
                 </div>
               </CardContent>
