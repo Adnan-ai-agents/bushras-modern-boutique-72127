@@ -166,7 +166,7 @@ const handleGoogleSignIn = async () => {
   setIsSocialLoading(true);
   
   try {
-    const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
+    const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -191,7 +191,7 @@ const handleFacebookSignIn = async () => {
   setIsSocialLoading(true);
   
   try {
-    const redirectUrl = import.meta.env.VITE_SUBDOMAIN || window.location.origin;
+    const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: {
