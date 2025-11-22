@@ -58,9 +58,12 @@ export type Database = {
           created_at: string
           id: string
           items: Json
+          payment_method_id: string | null
+          payment_status: string | null
           shipping_address: Json | null
           status: string
           total: number
+          transaction_id: string | null
           updated_at: string
           user_id: string
         }
@@ -68,9 +71,12 @@ export type Database = {
           created_at?: string
           id?: string
           items: Json
+          payment_method_id?: string | null
+          payment_status?: string | null
           shipping_address?: Json | null
           status?: string
           total: number
+          transaction_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -78,11 +84,61 @@ export type Database = {
           created_at?: string
           id?: string
           items?: Json
+          payment_method_id?: string | null
+          payment_status?: string | null
           shipping_address?: Json | null
           status?: string
           total?: number
+          transaction_id?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          config: Json | null
+          created_at: string
+          display_order: number
+          id: string
+          instructions: string | null
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          type: Database["public"]["Enums"]["payment_method_type"]
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          type?: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          type?: Database["public"]["Enums"]["payment_method_type"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -193,6 +249,7 @@ export type Database = {
     }
     Enums: {
       app_role: "user" | "admin" | "super_admin" | "moderator"
+      payment_method_type: "manual" | "gateway" | "offline"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -321,6 +378,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "admin", "super_admin", "moderator"],
+      payment_method_type: ["manual", "gateway", "offline"],
     },
   },
 } as const

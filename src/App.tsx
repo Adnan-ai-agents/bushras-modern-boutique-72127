@@ -29,6 +29,7 @@ import AdminTeam from "./pages/admin/TeamManagement";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AdminPermissionManagement from "./pages/admin/PermissionManagement";
+import AdminPaymentMethods from "./pages/admin/PaymentMethods";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => {
           <Route path="/admin/team" element={<ProtectedRoute requireSuperAdmin><AdminTeam /></ProtectedRoute>} />
           <Route path="/admin/promotions" element={<ProtectedRoute requireAdmin><Promotions /></ProtectedRoute>} />
           <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><AdminPermissionManagement /></ProtectedRoute>} />
+          <Route path="/admin/payment-methods" element={<ProtectedRoute requireAdmin><AdminPaymentMethods /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
