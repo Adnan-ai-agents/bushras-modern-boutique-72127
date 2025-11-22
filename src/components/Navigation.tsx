@@ -1,12 +1,21 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Menu, X, User, Search, LogOut } from "lucide-react";
+import { ShoppingBag, Menu, X, User, Search, LogOut, UserCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import { authService } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import CartDrawer from "./CartDrawer";
 
 const Navigation = () => {
@@ -78,19 +87,50 @@ const Navigation = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="hover:bg-accent">
+            <Button variant="ghost" size="icon" className="hover:bg-accent">
               <Search className="h-5 w-5" />
             </Button>
             
             {user ? (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-muted-foreground">
-                  Welcome, {user.profile?.name || user.email}
-                </span>
-                <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2 hover:bg-accent">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.profile?.avatar_url || ''} alt={user.profile?.name || 'User'} />
+                      <AvatarFallback>
+                        <UserCircle2 className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-left">
+                      <p className="text-sm font-medium">{user.profile?.name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <UserCircle2 className="mr-2 h-4 w-4" />
+                    Profile Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/orders')}>
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    My Orders
+                  </DropdownMenuItem>
+                  {(isAdmin || isSuperAdmin) && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <User className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button variant="outline" onClick={() => navigate("/auth")}>
                 <User className="h-4 w-4 mr-2" />
@@ -147,29 +187,39 @@ const Navigation = () => {
                 </Link>
               )
             ))}
-            <div className="flex items-center space-x-4 pt-4 border-t border-border">
-              <Button variant="ghost" size="icon" className="hover:bg-accent">
+            <div className="flex flex-col space-y-4 pt-4 border-t border-border">
+              <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
                 <Search className="h-5 w-5" />
               </Button>
               
               {user ? (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">
-                    {user.profile?.name || user.email}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center space-x-2 p-2">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.profile?.avatar_url || ''} alt={user.profile?.name || 'User'} />
+                      <AvatarFallback>
+                        <UserCircle2 className="h-6 w-6" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{user.profile?.name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
+                    <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </Button>
                 </div>
               ) : (
-                <Button variant="outline" onClick={() => navigate("/auth")}>
+                <Button variant="outline" onClick={() => navigate("/auth")} className="w-full">
                   <User className="h-4 w-4 mr-2" />
                   Sign In
                 </Button>
               )}
               
               <CartDrawer>
-                <Button variant="ghost" size="icon" className="hover:bg-accent">
+                <Button variant="ghost" size="icon" className="hover:bg-accent w-full">
                   <ShoppingBag className="h-5 w-5" />
                 </Button>
               </CartDrawer>

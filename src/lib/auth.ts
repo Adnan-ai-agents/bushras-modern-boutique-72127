@@ -7,6 +7,7 @@ export interface AuthUser extends User {
     name: string;
     phone?: string;
     address?: any;
+    avatar_url?: string;
   };
   roles?: Array<'admin' | 'moderator' | 'user' | 'super_admin'>;
 }
@@ -74,6 +75,7 @@ export const authService = {
     name: string;
     phone: string;
     address: any;
+    avatar_url: string;
   }>) {
     const { data: { user } } = await supabase.auth.getUser();
     

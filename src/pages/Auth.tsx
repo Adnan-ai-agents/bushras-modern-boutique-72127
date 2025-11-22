@@ -95,14 +95,6 @@ const handleSignIn = async (e: React.FormEvent) => {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
-      
-      // Redirect immediately after successful sign-in
-      setTimeout(() => {
-        const roles = (data.user as any).roles || [];
-        const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-        const redirectTo = isAdmin ? '/admin' : from;
-        navigate(redirectTo, { replace: true });
-      }, 500);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
@@ -143,20 +135,16 @@ const handleSignUp = async (e: React.FormEvent) => {
     if (data.user) {
       toast({
         title: "Account created!",
-        description: "You're all set. Redirecting...",
+        description: "You're all set. Welcome!",
       });
       
-      // Clear form and redirect
+      // Clear form
       setSignUpForm({
         name: "",
         email: "",
         password: "",
         confirmPassword: "",
       });
-      
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 500);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
