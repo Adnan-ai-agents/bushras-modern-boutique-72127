@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { getErrorMessage } from "@/utils/errors";
@@ -25,15 +26,14 @@ const Products = () => {
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [maxPrice, setMaxPrice] = useState(50000);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>('newest');
   const navigate = useNavigate();
 
   const categories = ['Bridal', 'Party Wear', 'Casual Wear', 'Formal Wear', 'Festive Collection'];
-  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
   useEffect(() => {
     fetchProducts();
-  }, [searchQuery, selectedCategories, selectedSizes, priceRange]);
+  }, [searchQuery, selectedCategories, priceRange, sortBy]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -52,7 +52,27 @@ const Products = () => {
 
       query = query.gte('price', priceRange[0]).lte('price', priceRange[1]);
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      // Apply sorting
+      switch (sortBy) {
+        case 'price-asc':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price-desc':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'name-asc':
+          query = query.order('name', { ascending: true });
+          break;
+        case 'name-desc':
+          query = query.order('name', { ascending: false });
+          break;
+        case 'newest':
+        default:
+          query = query.order('created_at', { ascending: false });
+          break;
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -63,10 +83,9 @@ const Products = () => {
       if (productsData.length > 0) {
         const prices = productsData.map(p => p.price);
         const calculatedMax = Math.max(...prices);
-        setMaxPrice(Math.ceil(calculatedMax / 1000) * 1000); // Round up to nearest 1000
+        setMaxPrice(Math.ceil(calculatedMax / 1000) * 1000);
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
       toast({
         title: "Error",
         description: getErrorMessage(error),
@@ -83,17 +102,11 @@ const Products = () => {
     );
   };
 
-  const handleSizeToggle = (size: string) => {
-    setSelectedSizes(prev =>
-      prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
-    );
-  };
-
   const clearFilters = () => {
     setSelectedCategories([]);
-    setSelectedSizes([]);
     setPriceRange([0, maxPrice]);
     setSearchQuery('');
+    setSortBy('newest');
   };
 
   const FilterContent = () => (
@@ -131,22 +144,6 @@ const Products = () => {
         </div>
       </div>
 
-      <div>
-        <Label className="text-base font-semibold mb-4 block">Sizes</Label>
-        <div className="grid grid-cols-3 gap-2">
-          {sizes.map(size => (
-            <Button
-              key={size}
-              variant={selectedSizes.includes(size) ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleSizeToggle(size)}
-            >
-              {size}
-            </Button>
-          ))}
-        </div>
-      </div>
-
       <Button variant="outline" className="w-full" onClick={clearFilters}>
         <X className="h-4 w-4 mr-2" />
         Clear Filters
@@ -172,6 +169,20 @@ const Products = () => {
                 className="pl-10"
               />
             </div>
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[180px]">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                <SelectItem value="name-asc">Name: A to Z</SelectItem>
+                <SelectItem value="name-desc">Name: Z to A</SelectItem>
+              </SelectContent>
+            </Select>
             
             <Sheet>
               <SheetTrigger asChild>
@@ -191,17 +202,12 @@ const Products = () => {
             </Sheet>
           </div>
 
-          {(selectedCategories.length > 0 || selectedSizes.length > 0 || searchQuery) && (
+          {(selectedCategories.length > 0 || searchQuery) && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-muted-foreground">Active filters:</span>
               {selectedCategories.map(cat => (
                 <Button key={cat} variant="secondary" size="sm" onClick={() => handleCategoryToggle(cat)}>
                   {cat} <X className="h-3 w-3 ml-1" />
-                </Button>
-              ))}
-              {selectedSizes.map(size => (
-                <Button key={size} variant="secondary" size="sm" onClick={() => handleSizeToggle(size)}>
-                  {size} <X className="h-3 w-3 ml-1" />
                 </Button>
               ))}
               {searchQuery && (

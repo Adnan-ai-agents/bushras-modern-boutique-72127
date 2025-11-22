@@ -268,7 +268,7 @@ The app will be available at: **http://localhost:8080**
 - **Zustand** - Lightweight state management
 - **React Hook Form** - Form handling
 - **Zod** - Schema validation
-- **Tanstack React Query** - Server state caching
+- **Tanstack React Query** - Server state caching (staleTime: 5min, gcTime: 30min)
 - **js-cookie** - Cookie management
 
 ### Backend (Lovable Cloud/Supabase):
@@ -499,16 +499,34 @@ Available npm scripts in `package.json`:
 ### Adding a New Feature:
 
 1. **Database Changes** (if needed):
-   - Create migration in Supabase dashboard
+   - Create migration using Supabase migration tool
    - Update RLS policies
-   - Regenerate types: `npm run build`
+   - Add database indexes for performance
+   - Regenerate types: Types auto-update after migration
 
 2. **Service Layer**:
    - Add functions to appropriate service file in `src/services/`
+   - Use service layer for all Supabase calls (never call directly from components)
 
 3. **React Query Integration**:
    - Add query key to `src/lib/queryClient.ts`
-   - Use `useQuery` or `useMutation` in components
+   - Use `useQuery` for data fetching:
+     ```typescript
+     const { data, isLoading, error } = useQuery({
+       queryKey: queryKeys.products(),
+       queryFn: () => productsService.getProducts(),
+       staleTime: 10 * 60 * 1000, // 10 minutes
+     });
+     ```
+   - Use `useMutation` for data updates:
+     ```typescript
+     const mutation = useMutation({
+       mutationFn: productsService.createProduct,
+       onSuccess: () => {
+         queryClient.invalidateQueries({ queryKey: queryKeys.products() });
+       },
+     });
+     ```
 
 4. **UI Components**:
    - Create component in `src/components/` or `src/pages/`
@@ -525,7 +543,7 @@ Available npm scripts in `package.json`:
 
 7. **State Management**:
    - Global state → Zustand store in `src/store/`
-   - Server state → React Query
+   - Server state → React Query (products, orders, profiles)
    - Local state → useState
 
 ### Testing Your Changes:
