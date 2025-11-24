@@ -35,6 +35,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           // Set up auth state listener
           supabase.auth.onAuthStateChange((event, session) => {
+            console.log('🔐 Auth state changed:', event, 'User ID:', session?.user?.id);
             set({ session, loading: false });
             
             if (session?.user) {
@@ -47,12 +48,16 @@ export const useAuthStore = create<AuthState>()(
                     .eq('id', session.user.id)
                     .maybeSingle();
                   
-                  const { data: userRoles } = await supabase
+                  const { data: userRoles, error: rolesError } = await supabase
                     .from('user_roles')
                     .select('role')
                     .eq('user_id', session.user.id);
                   
+                  console.log('👥 Fetched roles for user:', session.user.id, userRoles, rolesError);
+                  
                   const roles = userRoles?.map(r => r.role) || [];
+                  
+                  console.log('✅ Setting user with roles:', roles);
                   
                   set({ 
                     user: { 
@@ -62,17 +67,19 @@ export const useAuthStore = create<AuthState>()(
                     } as AuthUser
                   });
                 } catch (error) {
-                  console.error('Error fetching profile:', error);
+                  console.error('❌ Error fetching profile/roles:', error);
                   set({ user: session.user as AuthUser });
                 }
               }, 0);
             } else {
+              console.log('🚪 User logged out');
               set({ user: null });
             }
           });
 
           // Check for existing session
           const { data: { session } } = await supabase.auth.getSession();
+          console.log('🔍 Initial session check:', session?.user?.id);
           set({ session });
           
           if (session?.user) {
@@ -82,12 +89,16 @@ export const useAuthStore = create<AuthState>()(
               .eq('id', session.user.id)
               .maybeSingle();
             
-            const { data: userRoles } = await supabase
+            const { data: userRoles, error: rolesError } = await supabase
               .from('user_roles')
               .select('role')
               .eq('user_id', session.user.id);
             
+            console.log('👥 Initial roles fetch:', userRoles, rolesError);
+            
             const roles = userRoles?.map(r => r.role) || [];
+            
+            console.log('✅ Initial user set with roles:', roles);
             
             set({ 
               user: { 
@@ -100,7 +111,7 @@ export const useAuthStore = create<AuthState>()(
 
           set({ loading: false, initialized: true });
         } catch (error) {
-          console.error('Auth initialization error:', error);
+          console.error('❌ Auth initialization error:', error);
           set({ loading: false, initialized: true });
         }
       }
