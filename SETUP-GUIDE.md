@@ -1,11 +1,11 @@
-# 🚀 New Database Setup Guide - Super Simple!
+# 🚀 Database Setup Guide - One Command!
 
 ## What This Does
-This app will **automatically setup a new Supabase database** when you provide credentials in `.env`. No manual SQL needed!
+This app provides **automated database setup** with a single command. Just provide Supabase credentials and run `npm run setup`.
 
 ---
 
-## ⚡ Quick Setup (3 Steps)
+## ⚡ Super Quick Setup (3 Steps)
 
 ### Step 1: Create Supabase Project
 1. Go to [supabase.com](https://supabase.com)
@@ -23,27 +23,43 @@ This app will **automatically setup a new Supabase database** when you provide c
    - **Project ID** (just the xxxxx part)
    - **anon/public key** (long JWT token starting with `eyJ...`)
 
-### Step 3: Update .env File
-Open `.env` file in your project and replace these lines:
+### Step 3: Run Automated Setup
+Open `.env` file and update with your credentials:
 ```env
 VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGc...your-key-here
 VITE_SUPABASE_PROJECT_ID=xxxxx
 ```
 
-**That's it!** The app will auto-setup the database on first run.
+Then run the automated setup:
+
+**Option A - Using Supabase CLI (Recommended):**
+```bash
+npm run setup
+# Follow the instructions to use: supabase db push
+```
+
+**Option B - Manual SQL Editor:**
+```bash
+# Copy content from: supabase/migrations/0001_complete_schema.sql
+# Paste into Supabase Dashboard → SQL Editor → Run
+```
+
+**Done!** Database is now ready.
 
 ---
 
-## 🎯 What Happens Automatically
+## 🎯 What Gets Created Automatically
 
-When you start the app with new credentials, it will:
-1. ✅ Create all database tables (products, orders, profiles, etc.)
-2. ✅ Set up security policies (Row Level Security)
-3. ✅ Create admin role system
-4. ✅ Set up storage buckets for images
-5. ✅ Create database indexes for performance
-6. ✅ Add triggers for auto-profile creation
+The single migration file (`0001_complete_schema.sql`) creates:
+1. ✅ All database tables (products, orders, profiles, payment_methods, hero_slides, user_roles)
+2. ✅ Security functions (is_admin, has_role, is_super_admin)
+3. ✅ Row Level Security policies for all tables
+4. ✅ Storage buckets (product-images, hero-media) with policies
+5. ✅ Database indexes for performance
+6. ✅ Triggers (auto-profile creation, auto-update timestamps)
+7. ✅ Default payment method ("Contact Payment")
+8. ✅ Sample products and hero slides (optional demo data)
 
 ---
 
@@ -138,20 +154,33 @@ npm run dev
 
 ---
 
-## 🔄 Automatic Backup System
+## 🔄 Automated Backup System
 
-### Enable Auto Backups
-1. Supabase Dashboard → **Database** → **Backups**
-2. Enable daily automatic backups (Free on Pro plan)
-3. Backups retained for 7 days
+### Run Automated Backup
+```bash
+# Backup database tables only
+npm run backup
 
-### Manual Backup (Recommended Weekly)
-1. Go to **Table Editor**
-2. Select table → **Export** → Download CSV
-3. Repeat for: products, orders, profiles, user_roles
-4. Save to external storage (Google Drive, etc.)
+# Backup database + list storage files
+npm run backup --storage
+```
 
-See `BACKUP-GUIDE.md` for detailed backup strategies.
+Backups are saved to `backups/backup_TIMESTAMP/` folder with:
+- JSON files for each table
+- File lists for storage buckets
+- backup_summary.json with stats
+
+### Schedule Daily Backups (Linux/Mac)
+```bash
+# Open crontab
+crontab -e
+
+# Add daily backup at 2 AM
+0 2 * * * cd /path/to/project && npm run backup
+```
+
+### Manual Supabase Backups
+See `BACKUP-GUIDE.md` for Supabase dashboard backup methods.
 
 ---
 
@@ -243,22 +272,25 @@ git push origin main
 
 ## ✅ Summary
 
-**Setup Time**: ~10 minutes
-**Manual Steps**: 3 (Create project, copy credentials, make admin)
-**Auto Steps**: Everything else!
+**Setup Time**: ~5 minutes
+**Manual Steps**: 3 (Create project, update .env, run setup command)
+**What's Automated**: Everything else!
 
-The app handles:
-- ✅ Database table creation
-- ✅ Security policies
-- ✅ Triggers and functions
-- ✅ Storage setup
-- ✅ Indexes for performance
+**Single Migration File**: `supabase/migrations/0001_complete_schema.sql`
+- Consolidated from 19 separate migrations
+- One file = zero errors
+- Complete schema in ~400 lines
+
+**Automated Scripts**:
+- `npm run setup` - Database setup helper
+- `npm run backup` - Automated backups
 
 You only need to:
 1. Create Supabase project
-2. Update .env file
-3. Make yourself admin
-4. Start building!
+2. Update .env with credentials  
+3. Run: `npm run setup` (then follow instructions)
+4. Make yourself admin
+5. Done!
 
 ---
 
