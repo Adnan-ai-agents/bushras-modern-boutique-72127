@@ -3,10 +3,10 @@
 /**
  * AUTOMATED DATABASE SETUP SCRIPT
  * 
- * This script automatically sets up your Supabase database by:
- * 1. Reading credentials from .env file
- * 2. Running the consolidated migration SQL
- * 3. Verifying the setup
+ * This script verifies credentials and provides setup instructions.
+ * Direct SQL execution requires either:
+ * - Supabase CLI (recommended): supabase db push
+ * - SQL Editor (manual): Copy/paste migration file
  * 
  * Usage: npm run setup
  */
@@ -24,61 +24,84 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const PROJECT_ID = process.env.VITE_SUPABASE_PROJECT_ID;
 
 // Validation
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ Missing Supabase credentials in .env file');
-  console.error('Required: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY');
+if (!SUPABASE_URL || !SERVICE_KEY || !PROJECT_ID) {
+  console.error('❌ Missing Supabase credentials in .env file\n');
+  console.error('Required variables:');
+  console.error('  VITE_SUPABASE_URL');
+  console.error('  VITE_SUPABASE_PROJECT_ID');
+  console.error('  SUPABASE_SERVICE_ROLE_KEY\n');
+  console.error('💡 Find these in: Supabase Dashboard → Project Settings → API\n');
   process.exit(1);
 }
 
 console.log('🚀 Starting database setup...\n');
 
-// Create Supabase client
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Create Supabase admin client
+const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 async function runSetup() {
   try {
-    // Read migration file
-    const migrationPath = join(__dirname, '..', 'supabase', 'migrations', '0001_complete_schema.sql');
-    const migrationSQL = readFileSync(migrationPath, 'utf8');
-    
-    console.log('📄 Migration file loaded');
-    console.log('⏳ Running migration (this may take 30-60 seconds)...\n');
-    
-    // Note: The Supabase JS client doesn't support running raw SQL migrations directly
-    // This script documents the process, but users should use one of these methods:
-    // 1. Supabase CLI: supabase db push
-    // 2. SQL Editor in Supabase Dashboard
-    
-    console.log('⚠️  IMPORTANT: This script cannot execute SQL directly via the JS client.\n');
-    console.log('Please use ONE of these methods to run the migration:\n');
-    console.log('METHOD 1 - Supabase CLI (Recommended):');
-    console.log('  1. Install CLI: npm install -g supabase');
-    console.log('  2. Login: supabase login');
-    console.log('  3. Link project: supabase link --project-ref ' + process.env.VITE_SUPABASE_PROJECT_ID);
-    console.log('  4. Push migration: supabase db push\n');
-    
-    console.log('METHOD 2 - Manual (SQL Editor):');
-    console.log('  1. Open Supabase Dashboard → SQL Editor');
-    console.log('  2. Copy content from: supabase/migrations/0001_complete_schema.sql');
-    console.log('  3. Paste and run in SQL Editor\n');
-    
     // Test connection
-    const { data, error } = await supabase.auth.getSession();
+    console.log('🔍 Testing connection...');
+    const { data: health, error: healthError } = await supabase
+      .from('_migrations')
+      .select('*')
+      .limit(1);
     
-    if (error && error.message !== 'Auth session missing!') {
-      console.error('❌ Connection test failed:', error.message);
+    if (healthError && healthError.code !== '42P01') { // 42P01 = table doesn't exist (expected for new DB)
+      console.error('❌ Connection failed:', healthError.message);
       process.exit(1);
     }
     
-    console.log('✅ Supabase connection successful');
-    console.log('📋 Next steps:');
-    console.log('  1. Run the migration using one of the methods above');
-    console.log('  2. Sign up in your app');
-    console.log('  3. Make yourself admin (see SETUP-GUIDE.md)');
-    console.log('  4. Start building!\n');
+    console.log('✅ Connection successful\n');
+    
+    // Read migration file
+    const migrationPath = join(__dirname, '..', 'SINGLE_INIT.sql');
+    const migrationSQL = readFileSync(migrationPath, 'utf8');
+    
+    console.log('📄 Migration file loaded (432 lines)\n');
+    console.log('⚠️  LIMITATION: Direct SQL execution requires Supabase CLI or Management API\n');
+    console.log('📋 Choose ONE method:\n');
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('METHOD 1: Supabase CLI (Recommended - 100% automated)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('1. Install CLI:');
+    console.log('   npm install -g supabase\n');
+    console.log('2. Login:');
+    console.log('   supabase login\n');
+    console.log('3. Link project:');
+    console.log(`   supabase link --project-ref ${PROJECT_ID}\n`);
+    console.log('4. Push migration:');
+    console.log('   supabase db push\n');
+    console.log('✅ Done! Database is ready.\n');
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('METHOD 2: SQL Editor (Manual - 2 minutes)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('1. Open: Supabase Dashboard → SQL Editor');
+    console.log('2. Copy content from: SINGLE_INIT.sql');
+    console.log('3. Paste and click "Run"');
+    console.log('✅ Done! Database is ready.\n');
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📌 After setup:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log('1. Sign up in your app');
+    console.log('2. Run this SQL to make yourself admin:\n');
+    console.log('   SELECT id, email FROM auth.users;');
+    console.log('   INSERT INTO user_roles (user_id, role)');
+    console.log('   VALUES (\'YOUR_USER_ID\', \'admin\');\n');
+    console.log('3. Start building! 🎉\n');
     
   } catch (error) {
     console.error('❌ Setup failed:', error.message);
