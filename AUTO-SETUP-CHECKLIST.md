@@ -14,8 +14,14 @@ Get from Supabase Dashboard → Settings → API:
 - [ ] Copy **anon/public key** → Update `VITE_SUPABASE_PUBLISHABLE_KEY`
 - [ ] Copy **Project ID** → Update `VITE_SUPABASE_PROJECT_ID`
 
-### 3. Run Migrations (2 minutes)
-Option A - Automatic via Supabase CLI:
+### 3. Run Database Setup (1 minute)
+**Option A - Automated Setup Script:**
+```bash
+npm run setup
+# This will guide you through the setup process
+```
+
+**Option B - Using Supabase CLI:**
 ```bash
 # Install Supabase CLI if not installed
 npm install -g supabase
@@ -23,17 +29,17 @@ npm install -g supabase
 # Login to Supabase
 supabase login
 
-# Link to your project (use project ID from .env)
+# Link to your project
 supabase link --project-ref your-project-id
 
-# Push all migrations
+# Push single consolidated migration
 supabase db push
 ```
 
-Option B - Manual via SQL Editor:
+**Option C - Manual via SQL Editor:**
 1. Open Supabase Dashboard → SQL Editor
-2. Run migrations in order from `supabase/migrations/` folder
-3. Copy each file content and run (19 migration files)
+2. Copy content from `supabase/migrations/0001_complete_schema.sql`
+3. Paste and run (single file, ~400 lines)
 
 ### 4. Run Storage Setup (1 minute)
 In SQL Editor, run:
@@ -65,28 +71,42 @@ ON CONFLICT (user_id, role) DO NOTHING;
 
 ## ⚙️ What Happens Automatically
 
-### Database Setup (via migrations):
-- ✅ Creates `profiles` table
-- ✅ Creates `user_roles` table with enum (user, admin, super_admin)
-- ✅ Creates `products` table
-- ✅ Creates `orders` table
-- ✅ Creates `payment_methods` table
-- ✅ Creates `hero_slides` table
-- ✅ Enables Row Level Security on all tables
-- ✅ Creates RLS policies for data access
-- ✅ Creates database functions (is_admin, has_role, etc.)
-- ✅ Creates triggers (auto-profile on signup)
-- ✅ Creates indexes for performance
+### Single Migration File (`0001_complete_schema.sql`):
+✅ **Tables Created:**
+- profiles (user data)
+- user_roles (security: roles separate from profiles)
+- products (catalog)
+- orders (user purchases)
+- payment_methods (payment options)
+- hero_slides (homepage carousel)
 
-### Storage Setup (via STORAGE-FIX.sql):
-- ✅ Creates `product-images` bucket (public)
-- ✅ Creates `hero-media` bucket (public)
-- ✅ Sets up storage policies for uploads
+✅ **Security Functions:**
+- has_role() - Check user role
+- is_admin() - Check admin/super_admin
+- is_super_admin() - Check super_admin only
 
-### Code Configuration (via .env):
-- ✅ Supabase client reads from environment
-- ✅ No hardcoded credentials in code
-- ✅ Easy to switch between projects
+✅ **RLS Policies:**
+- Users can only see their own data
+- Admins can manage all data
+- Public can view products/slides
+
+✅ **Storage Buckets:**
+- product-images (5MB limit, images only)
+- hero-media (10MB limit, images/videos)
+- Proper admin-only upload policies
+
+✅ **Performance:**
+- Database indexes on all key columns
+- Optimized for queries and searches
+
+✅ **Automation:**
+- Auto-create profile on signup
+- Auto-update timestamps
+- Default 'user' role assignment
+
+✅ **Default Data:**
+- "Contact Payment" method
+- Sample products (optional demo)
 
 ---
 
