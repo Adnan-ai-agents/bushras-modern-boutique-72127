@@ -8,7 +8,10 @@ Set up fresh Supabase database with **ONE migration file** and automated backups
 ## 📋 Prerequisites
 1. ✅ Supabase account created
 2. ✅ New project created in Supabase
-3. ✅ Credentials copied to `.env`
+3. ✅ Credentials copied to `.env`:
+   - Go to: Project Settings → API
+   - Copy: `URL`, `anon/public key`, `service_role key`
+   - Add to `.env` file
 
 ---
 
