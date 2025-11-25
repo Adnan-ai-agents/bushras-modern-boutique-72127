@@ -95,6 +95,17 @@ const handleSignIn = async (e: React.FormEvent) => {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
+      
+      // Wait a moment for auth state to update, then redirect
+      setTimeout(async () => {
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          const roles = currentUser.roles || [];
+          const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+          const redirectTo = isAdmin ? '/admin' : from;
+          navigate(redirectTo, { replace: true });
+        }
+      }, 500);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
@@ -145,6 +156,17 @@ const handleSignUp = async (e: React.FormEvent) => {
         password: "",
         confirmPassword: "",
       });
+      
+      // Wait a moment for auth state to update, then redirect
+      setTimeout(async () => {
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          const roles = currentUser.roles || [];
+          const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+          const redirectTo = isAdmin ? '/admin' : from;
+          navigate(redirectTo, { replace: true });
+        }
+      }, 500);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
