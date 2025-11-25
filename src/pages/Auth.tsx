@@ -33,6 +33,7 @@ const Auth = () => {
 const [isSigningIn, setIsSigningIn] = useState(false);
 const [isSigningUp, setIsSigningUp] = useState(false);
 const [isSocialLoading, setIsSocialLoading] = useState(false);
+const [justLoggedIn, setJustLoggedIn] = useState(false);
 const [error, setError] = useState<string>("");
 const [signInErrors, setSignInErrors] = useState<{email?: string; password?: string}>({});
 const [signUpErrors, setSignUpErrors] = useState<{name?: string; email?: string; password?: string; confirmPassword?: string}>({});
@@ -42,16 +43,23 @@ const { user, initialized } = useAuthStore();
 const location = useLocation();
 const from = location.state?.from?.pathname || '/';
 
-// Redirect if already logged in
+// Redirect after fresh login
+useEffect(() => {
+  if (!initialized || !user || !justLoggedIn) return;
+  
+  const roles = user.roles || [];
+  const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+  const redirectTo = isAdmin ? '/admin' : from;
+  navigate(redirectTo, { replace: true });
+}, [initialized, user, justLoggedIn, navigate, from]);
+
+// Redirect if already logged in on page load
 useEffect(() => {
   if (!initialized) return;
-  if (user) {
-    const roles = user.roles || [];
-    const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-    const redirectTo = isAdmin ? '/admin' : from;
-    navigate(redirectTo, { replace: true });
+  if (user && !justLoggedIn) {
+    navigate(from, { replace: true });
   }
-}, [initialized, user, navigate, from]);
+}, [initialized, user, justLoggedIn, navigate, from]);
 
   const [signInForm, setSignInForm] = useState({
     email: "",
@@ -95,17 +103,7 @@ const handleSignIn = async (e: React.FormEvent) => {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
-      
-      // Wait a moment for auth state to update, then redirect
-      setTimeout(async () => {
-        const currentUser = await authService.getCurrentUser();
-        if (currentUser) {
-          const roles = currentUser.roles || [];
-          const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-          const redirectTo = isAdmin ? '/admin' : from;
-          navigate(redirectTo, { replace: true });
-        }
-      }, 500);
+      setJustLoggedIn(true);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
@@ -156,17 +154,7 @@ const handleSignUp = async (e: React.FormEvent) => {
         password: "",
         confirmPassword: "",
       });
-      
-      // Wait a moment for auth state to update, then redirect
-      setTimeout(async () => {
-        const currentUser = await authService.getCurrentUser();
-        if (currentUser) {
-          const roles = currentUser.roles || [];
-          const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-          const redirectTo = isAdmin ? '/admin' : from;
-          navigate(redirectTo, { replace: true });
-        }
-      }, 500);
+      setJustLoggedIn(true);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
