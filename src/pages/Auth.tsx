@@ -38,13 +38,14 @@ const [signInErrors, setSignInErrors] = useState<{email?: string; password?: str
 const [signUpErrors, setSignUpErrors] = useState<{name?: string; email?: string; password?: string; confirmPassword?: string}>({});
 const navigate = useNavigate();
 const { toast } = useToast();
-const { user, initialized } = useAuthStore();
+const { user, initialized, loading } = useAuthStore();
 const location = useLocation();
 const from = location.state?.from?.pathname || '/';
 
-// Single unified redirect effect
+// Single unified redirect effect - wait for auth to fully initialize including roles
 useEffect(() => {
-  if (!initialized || !user) return;
+  // Wait for initialization to complete AND loading to finish
+  if (!initialized || loading || !user) return;
   
   const roles = user.roles || [];
   const isAdmin = roles.includes('admin') || roles.includes('super_admin');
@@ -61,7 +62,7 @@ useEffect(() => {
   });
   
   navigate(redirectTo, { replace: true });
-}, [initialized, user, navigate, from]);
+}, [initialized, loading, user, navigate, from]);
 
   const [signInForm, setSignInForm] = useState({
     email: "",

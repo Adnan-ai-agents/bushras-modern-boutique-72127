@@ -33,47 +33,60 @@ export const useAuthStore = create<AuthState>()(
         if (get().initialized) return;
         
         try {
+          // Helper function to fetch user with roles
+          const fetchUserWithRoles = async (userId: string) => {
+            try {
+              const [profileResult, rolesResult] = await Promise.all([
+                supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', userId)
+                  .maybeSingle(),
+                supabase
+                  .from('user_roles')
+                  .select('role')
+                  .eq('user_id', userId)
+              ]);
+
+              console.log('👥 Fetched roles for user:', userId, rolesResult.data);
+              
+              const roles = rolesResult.data?.map(r => r.role) || [];
+              console.log('✅ User roles:', roles);
+              
+              return {
+                profile: profileResult.data,
+                roles
+              };
+            } catch (error) {
+              console.error('❌ Error fetching profile/roles:', error);
+              return { profile: null, roles: [] };
+            }
+          };
+
           // Set up auth state listener
           supabase.auth.onAuthStateChange((event, session) => {
             console.log('🔐 Auth state changed:', event, 'User ID:', session?.user?.id);
-            set({ session, loading: false });
+            set({ session, loading: true });
             
             if (session?.user) {
-              // Fetch profile and roles after state change
+              // Fetch profile and roles - must use setTimeout to avoid deadlock
               setTimeout(async () => {
-                try {
-                  const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .maybeSingle();
-                  
-                  const { data: userRoles, error: rolesError } = await supabase
-                    .from('user_roles')
-                    .select('role')
-                    .eq('user_id', session.user.id);
-                  
-                  console.log('👥 Fetched roles for user:', session.user.id, userRoles, rolesError);
-                  
-                  const roles = userRoles?.map(r => r.role) || [];
-                  
-                  console.log('✅ Setting user with roles:', roles);
-                  
-                  set({ 
-                    user: { 
-                      ...session.user, 
-                      profile,
-                      roles
-                    } as AuthUser
-                  });
-                } catch (error) {
-                  console.error('❌ Error fetching profile/roles:', error);
-                  set({ user: session.user as AuthUser });
-                }
+                const { profile, roles } = await fetchUserWithRoles(session.user.id);
+                
+                set({ 
+                  user: { 
+                    ...session.user, 
+                    profile,
+                    roles
+                  } as AuthUser,
+                  loading: false
+                });
+                
+                console.log('✅ User state updated with roles:', roles);
               }, 0);
             } else {
               console.log('🚪 User logged out');
-              set({ user: null });
+              set({ user: null, loading: false });
             }
           });
 
@@ -83,20 +96,7 @@ export const useAuthStore = create<AuthState>()(
           set({ session });
           
           if (session?.user) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .maybeSingle();
-            
-            const { data: userRoles, error: rolesError } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id);
-            
-            console.log('👥 Initial roles fetch:', userRoles, rolesError);
-            
-            const roles = userRoles?.map(r => r.role) || [];
+            const { profile, roles } = await fetchUserWithRoles(session.user.id);
             
             console.log('✅ Initial user set with roles:', roles);
             
