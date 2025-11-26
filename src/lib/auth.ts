@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
-import { getAppUrl } from "./domain";
 
 export interface AuthUser extends User {
   profile?: {
