@@ -33,7 +33,6 @@ const Auth = () => {
 const [isSigningIn, setIsSigningIn] = useState(false);
 const [isSigningUp, setIsSigningUp] = useState(false);
 const [isSocialLoading, setIsSocialLoading] = useState(false);
-const [justLoggedIn, setJustLoggedIn] = useState(false);
 const [error, setError] = useState<string>("");
 const [signInErrors, setSignInErrors] = useState<{email?: string; password?: string}>({});
 const [signUpErrors, setSignUpErrors] = useState<{name?: string; email?: string; password?: string; confirmPassword?: string}>({});
@@ -43,23 +42,26 @@ const { user, initialized } = useAuthStore();
 const location = useLocation();
 const from = location.state?.from?.pathname || '/';
 
-// Redirect after fresh login
+// Single unified redirect effect
 useEffect(() => {
-  if (!initialized || !user || !justLoggedIn) return;
+  if (!initialized || !user) return;
   
   const roles = user.roles || [];
   const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+  
+  // Determine redirect destination based on role
   const redirectTo = isAdmin ? '/admin' : from;
+  
+  console.log('🔄 Auth redirect:', {
+    userEmail: user.email,
+    roles,
+    isAdmin,
+    from,
+    redirectTo
+  });
+  
   navigate(redirectTo, { replace: true });
-}, [initialized, user, justLoggedIn, navigate, from]);
-
-// Redirect if already logged in on page load
-useEffect(() => {
-  if (!initialized) return;
-  if (user && !justLoggedIn) {
-    navigate(from, { replace: true });
-  }
-}, [initialized, user, justLoggedIn, navigate, from]);
+}, [initialized, user, navigate, from]);
 
   const [signInForm, setSignInForm] = useState({
     email: "",
@@ -103,7 +105,6 @@ const handleSignIn = async (e: React.FormEvent) => {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
-      setJustLoggedIn(true);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
@@ -154,7 +155,6 @@ const handleSignUp = async (e: React.FormEvent) => {
         password: "",
         confirmPassword: "",
       });
-      setJustLoggedIn(true);
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
