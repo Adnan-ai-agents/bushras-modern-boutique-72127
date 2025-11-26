@@ -106,6 +106,28 @@ const handleSignIn = async (e: React.FormEvent) => {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
+
+      // Fetch user roles for immediate redirect
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id);
+
+      const roles = userRoles?.map(r => r.role) || [];
+      const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+      
+      // Determine redirect destination based on role
+      const redirectTo = isAdmin ? '/admin' : from;
+      
+      console.log('🔄 Sign-in redirect:', {
+        userEmail: data.user.email,
+        roles,
+        isAdmin,
+        redirectTo
+      });
+      
+      // Immediate redirect after sign-in
+      navigate(redirectTo, { replace: true });
     }
   } catch (err: any) {
     if (err instanceof z.ZodError) {
