@@ -66,7 +66,7 @@ export const useAuthStore = create<AuthState>()(
           // Set up auth state listener
           supabase.auth.onAuthStateChange((event, session) => {
             console.log('🔐 Auth state changed:', event, 'User ID:', session?.user?.id);
-            set({ session, loading: true });
+            set({ session, loading: true }); // KEEP loading true until roles are fetched
             
             if (session?.user) {
               // Fetch profile and roles - must use setTimeout to avoid deadlock
@@ -79,7 +79,7 @@ export const useAuthStore = create<AuthState>()(
                     profile,
                     roles
                   } as AuthUser,
-                  loading: false
+                  loading: false // NOW set loading false after roles are loaded
                 });
                 
                 console.log('✅ User state updated with roles:', roles);
@@ -93,9 +93,9 @@ export const useAuthStore = create<AuthState>()(
           // Check for existing session
           const { data: { session } } = await supabase.auth.getSession();
           console.log('🔍 Initial session check:', session?.user?.id);
-          set({ session });
           
           if (session?.user) {
+            set({ session, loading: true });
             const { profile, roles } = await fetchUserWithRoles(session.user.id);
             
             console.log('✅ Initial user set with roles:', roles);
@@ -105,11 +105,13 @@ export const useAuthStore = create<AuthState>()(
                 ...session.user, 
                 profile,
                 roles
-              } as AuthUser
+              } as AuthUser,
+              loading: false,
+              initialized: true
             });
+          } else {
+            set({ session, loading: false, initialized: true });
           }
-
-          set({ loading: false, initialized: true });
         } catch (error) {
           console.error('❌ Auth initialization error:', error);
           set({ loading: false, initialized: true });
