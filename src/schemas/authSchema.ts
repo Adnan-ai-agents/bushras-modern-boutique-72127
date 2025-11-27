@@ -17,6 +17,11 @@ export const signUpSchema = z.object({
     .trim()
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name must be less than 100 characters'),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone number format (e.g., +1234567890)')
+    .min(10, 'Phone number must be at least 10 digits'),
   email: z
     .string()
     .trim()

@@ -21,6 +21,7 @@ const signInSchema = z.object({
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  phone: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid phone number format (e.g., +1234567890)'),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
@@ -35,7 +36,7 @@ const [isSigningUp, setIsSigningUp] = useState(false);
 const [isSocialLoading, setIsSocialLoading] = useState(false);
 const [error, setError] = useState<string>("");
 const [signInErrors, setSignInErrors] = useState<{email?: string; password?: string}>({});
-const [signUpErrors, setSignUpErrors] = useState<{name?: string; email?: string; password?: string; confirmPassword?: string}>({});
+const [signUpErrors, setSignUpErrors] = useState<{name?: string; phone?: string; email?: string; password?: string; confirmPassword?: string}>({});
 const navigate = useNavigate();
 const { toast } = useToast();
 const { user, initialized, loading } = useAuthStore();
@@ -51,7 +52,7 @@ useEffect(() => {
   const isAdmin = roles.includes('admin') || roles.includes('super_admin');
   
   // Determine redirect destination based on role
-  const redirectTo = isAdmin ? '/admin' : from;
+  const redirectTo = isAdmin ? '/admin' : '/dashboard';
   
   console.log('🔄 Auth redirect:', {
     userEmail: user.email,
@@ -71,6 +72,7 @@ useEffect(() => {
 
   const [signUpForm, setSignUpForm] = useState({
     name: "",
+    phone: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -117,7 +119,7 @@ const handleSignIn = async (e: React.FormEvent) => {
       const isAdmin = roles.includes('admin') || roles.includes('super_admin');
       
       // Determine redirect destination based on role
-      const redirectTo = isAdmin ? '/admin' : from;
+      const redirectTo = isAdmin ? '/admin' : '/dashboard';
       
       console.log('🔄 Sign-in redirect:', {
         userEmail: data.user.email,
@@ -156,7 +158,8 @@ const handleSignUp = async (e: React.FormEvent) => {
     const { data, error } = await authService.signUp(
       validatedData.email,
       validatedData.password,
-      validatedData.name
+      validatedData.name,
+      validatedData.phone
     );
 
     if (error) {
@@ -174,6 +177,7 @@ const handleSignUp = async (e: React.FormEvent) => {
       // Clear form
       setSignUpForm({
         name: "",
+        phone: "",
         email: "",
         password: "",
         confirmPassword: "",
@@ -403,7 +407,28 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                         setSignUpForm({ ...signUpForm, name: e.target.value })
                       }
                       required
+                      aria-invalid={!!signUpErrors.name}
                     />
+                    {signUpErrors.name && (
+                      <p className="text-sm text-destructive">{signUpErrors.name}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Phone Number</Label>
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      placeholder="+1234567890"
+                      value={signUpForm.phone}
+                      onChange={(e) =>
+                        setSignUpForm({ ...signUpForm, phone: e.target.value })
+                      }
+                      required
+                      aria-invalid={!!signUpErrors.phone}
+                    />
+                    {signUpErrors.phone && (
+                      <p className="text-sm text-destructive">{signUpErrors.phone}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -415,7 +440,11 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                         setSignUpForm({ ...signUpForm, email: e.target.value })
                       }
                       required
+                      aria-invalid={!!signUpErrors.email}
                     />
+                    {signUpErrors.email && (
+                      <p className="text-sm text-destructive">{signUpErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
@@ -427,7 +456,11 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                         setSignUpForm({ ...signUpForm, password: e.target.value })
                       }
                       required
+                      aria-invalid={!!signUpErrors.password}
                     />
+                    {signUpErrors.password && (
+                      <p className="text-sm text-destructive">{signUpErrors.password}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Confirm Password</Label>
@@ -439,7 +472,11 @@ const facebookEnabled = Boolean(import.meta.env.VITE_FACEBOOK_APP_ID);
                         setSignUpForm({ ...signUpForm, confirmPassword: e.target.value })
                       }
                       required
+                      aria-invalid={!!signUpErrors.confirmPassword}
                     />
+                    {signUpErrors.confirmPassword && (
+                      <p className="text-sm text-destructive">{signUpErrors.confirmPassword}</p>
+                    )}
                   </div>
                   {error && (
                     <Alert variant="destructive">

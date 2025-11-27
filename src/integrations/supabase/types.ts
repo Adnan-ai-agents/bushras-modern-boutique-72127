@@ -189,6 +189,7 @@ export type Database = {
           id: string
           name: string | null
           phone: string | null
+          phone_verified: boolean | null
           updated_at: string
         }
         Insert: {
@@ -198,6 +199,7 @@ export type Database = {
           id: string
           name?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -207,7 +209,53 @@ export type Database = {
           id?: string
           name?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      promotional_banners: {
+        Row: {
+          created_at: string | null
+          cta_link: string | null
+          cta_text: string | null
+          description: string | null
+          display_order: number | null
+          end_date: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          start_date: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          description?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          start_date?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          description?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          start_date?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
