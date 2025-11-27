@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Upload, Mail, Phone, MapPin, Shield, Camera, CheckCircle, AlertCircle } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { AvatarSelectionModal } from "@/components/AvatarSelectionModal";
 
 interface NotificationPreferences {
   order_status_notifications: boolean;
@@ -30,10 +32,12 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [address, setAddress] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [profileHealth, setProfileHealth] = useState(0);
@@ -70,6 +74,7 @@ const Profile = () => {
       setName(profile.name || "");
       setEmail(user!.email || "");
       setPhone(profile.phone || "");
+      setPhoneVerified(profile.phone_verified || false);
       setAddress(typeof profile.address === 'string' ? profile.address : JSON.stringify(profile.address || ""));
       setAvatarUrl((profile as any).avatar_url || "");
       setProfileHealth((profile as any).profile_health_score || 0);
@@ -307,28 +312,37 @@ const Profile = () => {
                     {name.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <Label htmlFor="avatar-upload" className="cursor-pointer">
-                    <Button variant="outline" disabled={uploading} asChild>
-                      <span>
-                        {uploading ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Camera className="h-4 w-4 mr-2" />
-                        )}
-                        Change Avatar
-                      </span>
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowAvatarModal(true)}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Choose Avatar
                     </Button>
-                  </Label>
-                  <Input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleAvatarUpload}
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    JPG, PNG or WEBP. Max 2MB.
+                    <Label htmlFor="avatar-upload" className="cursor-pointer">
+                      <Button variant="outline" disabled={uploading} asChild>
+                        <span>
+                          {uploading ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Upload className="h-4 w-4 mr-2" />
+                          )}
+                          Upload Custom
+                        </span>
+                      </Button>
+                    </Label>
+                    <Input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Choose from presets or upload your own (Max 2MB)
                   </p>
                 </div>
               </div>
@@ -364,7 +378,14 @@ const Profile = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone / WhatsApp Number</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="phone">Phone / WhatsApp Number</Label>
+                    {phone && (
+                      <Badge variant={phoneVerified ? "default" : "secondary"}>
+                        {phoneVerified ? "Verified" : "Unverified"}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="relative">
                     <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -375,6 +396,16 @@ const Profile = () => {
                       className="pl-10"
                     />
                   </div>
+                  {phone && !phoneVerified && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      disabled
+                      className="w-full"
+                    >
+                      Verify Phone Number (Coming Soon)
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -519,6 +550,37 @@ const Profile = () => {
       </main>
 
       <Footer />
+
+      <AvatarSelectionModal
+        open={showAvatarModal}
+        onSelect={async (url) => {
+          try {
+            const { error } = await supabase
+              .from("profiles")
+              .update({ avatar_url: url })
+              .eq("id", user!.id);
+
+            if (error) throw error;
+
+            setAvatarUrl(url);
+            setShowAvatarModal(false);
+            await calculateHealthScore();
+
+            toast({
+              title: "Success",
+              description: "Avatar updated successfully",
+            });
+          } catch (error) {
+            toast({
+              title: "Error",
+              description: "Failed to update avatar",
+              variant: "destructive",
+            });
+          }
+        }}
+        onClose={() => setShowAvatarModal(false)}
+        currentAvatar={avatarUrl}
+      />
     </div>
   );
 };

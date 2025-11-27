@@ -418,7 +418,7 @@ CREATE POLICY "Admins can delete hero media"
 -- 11. INSERT DEFAULT DATA
 -- ============================================
 
--- Default payment method
+-- Default payment method (REQUIRED - only essential data)
 INSERT INTO public.payment_methods (name, type, instructions, is_active, display_order)
 VALUES (
   'Contact Payment',
@@ -429,21 +429,8 @@ VALUES (
 )
 ON CONFLICT DO NOTHING;
 
--- Sample products (optional - for demo)
-INSERT INTO public.products (name, description, price, category, stock, is_featured, image_url)
-VALUES
-  ('Elegant Summer Dress', 'Beautiful floral print dress perfect for summer occasions', 89.99, 'Dresses', 15, true, 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800'),
-  ('Classic Denim Jacket', 'Timeless denim jacket that goes with everything', 129.99, 'Outerwear', 20, true, 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800'),
-  ('Silk Blouse', 'Luxurious silk blouse for office or evening wear', 79.99, 'Tops', 12, true, 'https://images.unsplash.com/photo-1564257577871-9eb2d501b22f?w=800')
-ON CONFLICT DO NOTHING;
-
--- Sample hero slides (optional - for demo)
-INSERT INTO public.hero_slides (title, subtitle, image_url, cta_text, cta_link, order_index, is_active)
-VALUES
-  ('New Spring Collection', 'Discover the latest trends in fashion', 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920', 'Shop Now', '/products', 1, true),
-  ('Summer Sale', 'Up to 50% off on selected items', 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920', 'View Deals', '/products', 2, true)
-ON CONFLICT DO NOTHING;
-
 -- ============================================
 -- SETUP COMPLETE ✓
+-- All demo/dummy data removed for production
+-- Add your own products, hero slides, and banners through the admin UI
 -- ============================================
