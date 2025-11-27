@@ -12,7 +12,7 @@ export interface AuthUser extends User {
 }
 
 export const authService = {
-  async signUp(email: string, password: string, name: string) {
+  async signUp(email: string, password: string, name: string, phone: string) {
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -21,7 +21,8 @@ export const authService = {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          name
+          name,
+          phone
         }
       }
     });
