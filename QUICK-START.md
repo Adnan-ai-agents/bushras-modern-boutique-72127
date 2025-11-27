@@ -107,9 +107,9 @@ crontab -e
 ## 📁 What Was Created
 
 **Single Migration File:**
-- `SINGLE_INIT.sql` (432 lines)
+- `SINGLE_INIT.sql` - Complete schema, no demo data
 - Replaces 19 separate migrations
-- Complete schema in one place
+- Production-ready with only essential defaults
 
 **Automated Scripts:**
 - `scripts/setup.js` - Setup helper
@@ -119,6 +119,7 @@ crontab -e
 - `SETUP-GUIDE.md` - Detailed guide
 - `AUTO-SETUP-CHECKLIST.md` - Step-by-step
 - `BACKUP-GUIDE.md` - Backup strategies
+- `PHONE-VERIFICATION-SETUP.md` - SMS verification guide
 - `scripts/README.md` - Script docs
 
 ---
