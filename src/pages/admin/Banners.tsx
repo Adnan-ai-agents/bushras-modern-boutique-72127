@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2, Edit } from "lucide-react";
 import { SingleImageUpload } from "@/components/admin/SingleImageUpload";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftIndicator } from "@/components/admin/DraftIndicator";
 
 const AdminBanners = () => {
   const [banners, setBanners] = useState<any[]>([]);
@@ -29,9 +31,31 @@ const AdminBanners = () => {
     display_order: 0,
   });
 
+  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+    formId: editingBanner ? `banner_${editingBanner.id}` : 'banner_new',
+    defaultValues: formData,
+    enabled: dialogOpen,
+  });
+
   useEffect(() => {
     fetchBanners();
   }, []);
+
+  useEffect(() => {
+    if (dialogOpen && !editingBanner) {
+      const draft = loadDraft();
+      if (draft) {
+        setFormData(draft);
+      }
+    }
+  }, [dialogOpen, editingBanner]);
+
+  useEffect(() => {
+    if (dialogOpen) {
+      const timer = setTimeout(() => saveDraft(formData), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData, dialogOpen]);
 
   const fetchBanners = async () => {
     try {
@@ -74,6 +98,7 @@ const AdminBanners = () => {
         toast({ title: "Banner created successfully" });
       }
 
+      clearDraft();
       setDialogOpen(false);
       resetForm();
       fetchBanners();
@@ -166,6 +191,7 @@ const AdminBanners = () => {
                 {editingBanner ? 'Update' : 'Create'} a promotional banner for your store
               </DialogDescription>
             </DialogHeader>
+            <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="title">Title *</Label>
