@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Upload, Trash2, GripVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftIndicator } from "@/components/admin/DraftIndicator";
 
 interface HeroSlide {
   id: string;
@@ -41,9 +43,25 @@ const HeroSlider = () => {
     { title: "", subtitle: "", cta_text: "", cta_link: "", file: null }
   ]);
 
+  const draftData = newSlides.map(({ file, ...rest }) => rest);
+  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+    formId: 'hero_slides',
+    defaultValues: draftData,
+    enabled: true,
+  });
+
   useEffect(() => {
     checkAdminAndFetch();
+    const draft = loadDraft();
+    if (draft && Array.isArray(draft)) {
+      setNewSlides(draft.map((d: any) => ({ ...d, file: null })));
+    }
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => saveDraft(draftData), 2000);
+    return () => clearTimeout(timer);
+  }, [newSlides]);
 
   const checkAdminAndFetch = async () => {
     if (!user) {
@@ -212,7 +230,7 @@ const HeroSlider = () => {
         description: `${newSlides.length} slide(s) uploaded successfully`,
       });
 
-      // Reset forms
+      clearDraft();
       setNewSlides([{ title: "", subtitle: "", cta_text: "", cta_link: "", file: null }]);
       fetchSlides();
     } catch (error: any) {
@@ -305,7 +323,10 @@ const HeroSlider = () => {
 
         {/* Upload Section */}
         <Card className="p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Add New Slides</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Add New Slides</h2>
+            <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
+          </div>
           
           <div className="space-y-6">
             {newSlides.map((slide, index) => (

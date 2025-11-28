@@ -17,6 +17,8 @@ import Navigation from "@/components/Navigation";
 import { z } from "zod";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftIndicator } from "@/components/admin/DraftIndicator";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -67,6 +69,12 @@ const AdminProducts = () => {
   const [uploading, setUploading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
+  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+    formId: editingProduct ? `product_${editingProduct.id}` : 'product_new',
+    defaultValues: { ...formData, productImages },
+    enabled: isDialogOpen,
+  });
+
   useEffect(() => {
     if (!user || !user.roles?.includes('admin')) {
       navigate('/');
@@ -75,6 +83,35 @@ const AdminProducts = () => {
 
     fetchProducts();
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (isDialogOpen && !editingProduct) {
+      const draft = loadDraft();
+      if (draft) {
+        setFormData({
+          name: draft.name || '',
+          description: draft.description || '',
+          price: draft.price || '',
+          list_price: draft.list_price || '',
+          category: draft.category || '',
+          brand: draft.brand || 'Bushra\'s Collection',
+          stock_quantity: draft.stock_quantity || '0',
+          is_published: draft.is_published ?? true,
+          initial_review_count: draft.initial_review_count || '0',
+        });
+        if (draft.productImages) {
+          setProductImages(draft.productImages);
+        }
+      }
+    }
+  }, [isDialogOpen, editingProduct]);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      const timer = setTimeout(() => saveDraft({ ...formData, productImages }), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData, productImages, isDialogOpen]);
 
   const fetchProducts = async () => {
     try {
@@ -154,6 +191,7 @@ const AdminProducts = () => {
         });
       }
 
+      clearDraft();
       setIsDialogOpen(false);
       setEditingProduct(null);
       setFormData({
@@ -371,6 +409,8 @@ const AdminProducts = () => {
                       {editingProduct ? 'Update product details' : 'Add a new product to your catalog'}
                     </DialogDescription>
                   </DialogHeader>
+
+                  <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
 
                   <form onSubmit={handleSubmit}>
                     <div className="space-y-4">

@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Plus, Edit, Trash2, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFormDraft } from '@/hooks/useFormDraft';
+import { DraftIndicator } from '@/components/admin/DraftIndicator';
 
 interface PaymentMethod {
   id: string;
@@ -45,6 +47,12 @@ export default function PaymentMethods() {
     display_order: 0,
   });
 
+  const { loadDraft, saveDraft, clearDraft, draftState } = useFormDraft({
+    formId: editingMethod ? `payment_${editingMethod.id}` : 'payment_new',
+    defaultValues: formData,
+    enabled: dialogOpen,
+  });
+
   useEffect(() => {
     const roles = user?.roles || [];
     if (!roles.includes('admin') && !roles.includes('super_admin')) {
@@ -53,6 +61,22 @@ export default function PaymentMethods() {
     }
     fetchPaymentMethods();
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (dialogOpen && !editingMethod) {
+      const draft = loadDraft();
+      if (draft) {
+        setFormData(draft);
+      }
+    }
+  }, [dialogOpen, editingMethod]);
+
+  useEffect(() => {
+    if (dialogOpen) {
+      const timer = setTimeout(() => saveDraft(formData), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [formData, dialogOpen]);
 
   const fetchPaymentMethods = async () => {
     try {
@@ -128,6 +152,7 @@ export default function PaymentMethods() {
         toast.success('Payment method created successfully');
       }
 
+      clearDraft();
       handleCloseDialog();
       fetchPaymentMethods();
     } catch (error: any) {
@@ -291,6 +316,7 @@ export default function PaymentMethods() {
               Configure payment options for your customers
             </DialogDescription>
           </DialogHeader>
+          <DraftIndicator lastSaved={draftState.lastSaved} onClear={clearDraft} />
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
