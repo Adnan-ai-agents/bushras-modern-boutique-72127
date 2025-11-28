@@ -30,7 +30,8 @@ export const useAuthStore = create<AuthState>()(
       setInitialized: (initialized) => set({ initialized }),
 
       initialize: async () => {
-        if (get().initialized) return;
+        // Always initialize to ensure fresh auth state
+        set({ loading: true, initialized: false });
         
         try {
           // Helper function to fetch user with roles
@@ -121,9 +122,8 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({ 
-        // Don't persist session as it's managed by Supabase
-        user: state.user,
-        initialized: state.initialized
+        // Don't persist session, loading, or initialized - always start fresh
+        user: state.user
       }),
     }
   )
