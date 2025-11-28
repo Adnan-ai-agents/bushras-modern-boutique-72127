@@ -48,25 +48,20 @@ export const useAuthStore = create<AuthState>()(
                   .select('role')
                   .eq('user_id', userId)
               ]);
-
-              console.log('👥 Fetched roles for user:', userId, rolesResult.data);
               
               const roles = rolesResult.data?.map(r => r.role) || [];
-              console.log('✅ User roles:', roles);
               
               return {
                 profile: profileResult.data,
                 roles
               };
             } catch (error) {
-              console.error('❌ Error fetching profile/roles:', error);
               return { profile: null, roles: [] };
             }
           };
 
           // Set up auth state listener
           supabase.auth.onAuthStateChange((event, session) => {
-            console.log('🔐 Auth state changed:', event, 'User ID:', session?.user?.id);
             set({ session, loading: true }); // KEEP loading true until roles are fetched
             
             if (session?.user) {
@@ -82,24 +77,18 @@ export const useAuthStore = create<AuthState>()(
                   } as AuthUser,
                   loading: false // NOW set loading false after roles are loaded
                 });
-                
-                console.log('✅ User state updated with roles:', roles);
               }, 0);
             } else {
-              console.log('🚪 User logged out');
               set({ user: null, loading: false });
             }
           });
 
           // Check for existing session
           const { data: { session } } = await supabase.auth.getSession();
-          console.log('🔍 Initial session check:', session?.user?.id);
           
           if (session?.user) {
             set({ session, loading: true });
             const { profile, roles } = await fetchUserWithRoles(session.user.id);
-            
-            console.log('✅ Initial user set with roles:', roles);
             
             set({ 
               user: { 
@@ -114,7 +103,6 @@ export const useAuthStore = create<AuthState>()(
             set({ session, loading: false, initialized: true });
           }
         } catch (error) {
-          console.error('❌ Auth initialization error:', error);
           set({ loading: false, initialized: true });
         }
       }
