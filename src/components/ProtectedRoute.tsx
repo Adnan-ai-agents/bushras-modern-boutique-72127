@@ -36,27 +36,13 @@ export const ProtectedRoute = ({
   const isAdmin = roles.includes('admin') || roles.includes('super_admin');
   const isSuperAdmin = roles.includes('super_admin');
 
-  console.log('🛡️ ProtectedRoute check:', {
-    userEmail: user.email,
-    roles,
-    isAdmin,
-    isSuperAdmin,
-    requireAdmin,
-    requireSuperAdmin,
-    path: location.pathname
-  });
-
   if (requireSuperAdmin && !isSuperAdmin) {
-    console.log('❌ Access denied: Super admin required');
     return <Navigate to="/" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
-    console.log('❌ Access denied: Admin required');
     return <Navigate to="/" replace />;
   }
-
-  console.log('✅ Access granted');
 
   return <>{children}</>;
 };
