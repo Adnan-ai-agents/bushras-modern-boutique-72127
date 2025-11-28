@@ -28,6 +28,7 @@
 - 🎯 Promotional banner management
 - 💰 Payment method configuration (Super Admin)
 - 👨‍💼 Role-based access control (User, Admin, Super Admin)
+- 💾 **Form auto-save system** - Never lose form data on refresh/navigate
 
 ### Technical Features
 - ⚡ Lightning-fast Vite development
@@ -130,6 +131,7 @@ Best for long-term hosting with lower costs and better latency for Pakistani aud
 |----------|-------------|
 | **[QUICK-START.md](./QUICK-START.md)** | Fast setup in 3 commands |
 | **[SETUP-GUIDE.md](./SETUP-GUIDE.md)** | Detailed setup instructions |
+| **[ADMIN-GUIDE.md](./ADMIN-GUIDE.md)** | Complete admin panel guide with auto-save system |
 | **[USER-FLOW.md](./USER-FLOW.md)** | Complete user journey documentation |
 | **[DEPLOYMENT-VERCEL.md](./DEPLOYMENT-VERCEL.md)** | Deploy to Vercel for testing |
 | **[DEPLOYMENT-PKDOMAIN.md](./DEPLOYMENT-PKDOMAIN.md)** | Deploy to PKDomain for production |
