@@ -19,6 +19,7 @@ CREATE TABLE public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
   phone TEXT,
+  phone_verified BOOLEAN DEFAULT false,
   address JSONB,
   avatar_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -40,10 +41,13 @@ CREATE TABLE public.products (
   name TEXT NOT NULL,
   description TEXT,
   price NUMERIC(10,2) NOT NULL,
+  list_price NUMERIC(10,2),
+  brand TEXT,
   image_url TEXT,
   category TEXT,
   stock INTEGER DEFAULT 0,
   is_featured BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -89,6 +93,22 @@ CREATE TABLE public.hero_slides (
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Promotional banners table
+CREATE TABLE public.promotional_banners (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  image_url TEXT NOT NULL,
+  cta_text TEXT,
+  cta_link TEXT,
+  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER DEFAULT 0,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- ============================================
@@ -220,6 +240,11 @@ CREATE TRIGGER set_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
 
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.promotional_banners
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
 -- ============================================
 -- 6. ENABLE ROW LEVEL SECURITY
 -- ============================================
@@ -230,6 +255,7 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.hero_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promotional_banners ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
 -- 7. CREATE RLS POLICIES
@@ -313,6 +339,21 @@ CREATE POLICY "Admins can manage payment methods"
   ON public.payment_methods FOR ALL
   USING (public.is_admin(auth.uid()));
 
+-- Promotional banners policies
+CREATE POLICY "Anyone can view active banners"
+  ON public.promotional_banners FOR SELECT
+  USING (is_active = true AND 
+         (start_date IS NULL OR start_date <= now()) AND 
+         (end_date IS NULL OR end_date >= now()));
+
+CREATE POLICY "Admins can view all banners"
+  ON public.promotional_banners FOR SELECT
+  USING (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can manage banners"
+  ON public.promotional_banners FOR ALL
+  USING (public.is_admin(auth.uid()));
+
 -- ============================================
 -- 8. CREATE INDEXES FOR PERFORMANCE
 -- ============================================
@@ -339,6 +380,10 @@ CREATE INDEX idx_payment_methods_display_order ON public.payment_methods(display
 
 -- Hero slides indexes
 CREATE INDEX idx_hero_slides_active ON public.hero_slides(is_active, order_index) WHERE is_active = true;
+
+-- Promotional banners indexes
+CREATE INDEX idx_promotional_banners_active ON public.promotional_banners(is_active, display_order) WHERE is_active = true;
+CREATE INDEX idx_promotional_banners_dates ON public.promotional_banners(start_date, end_date);
 
 -- ============================================
 -- 9. CREATE STORAGE BUCKETS

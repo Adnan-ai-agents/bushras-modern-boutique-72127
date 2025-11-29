@@ -288,65 +288,128 @@ const AdminProducts = () => {
 
     setUploading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const Papa = await import('papaparse');
       
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
+      Papa.parse(csvFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          try {
+            const validProducts = [];
+            const errors = [];
 
-      const formData = new FormData();
-      formData.append('file', csvFile);
+            for (let i = 0; i < results.data.length; i++) {
+              const row: any = results.data[i];
+              
+              // Validate each row using same schema as manual form
+              try {
+                const validated = productSchema.parse({
+                  name: row.name?.trim(),
+                  description: row.description?.trim(),
+                  price: parseFloat(row.price),
+                  list_price: parseFloat(row.list_price),
+                  brand: row.brand?.trim(),
+                  category: row.category?.trim(),
+                  stock_quantity: parseInt(row.stock_quantity || '0')
+                });
 
-      const response = await supabase.functions.invoke('process-product-csv', {
-        body: formData,
+                validProducts.push({
+                  name: validated.name,
+                  description: validated.description,
+                  price: validated.price,
+                  list_price: validated.list_price,
+                  brand: validated.brand,
+                  category: validated.category,
+                  stock_quantity: validated.stock_quantity,
+                  images: row.image_url ? [row.image_url.trim()] : [],
+                  is_active: row.is_active?.toLowerCase() !== 'false',
+                  is_published: row.is_active?.toLowerCase() !== 'false',
+                  is_featured: false,
+                  initial_review_count: 0
+                });
+              } catch (error: any) {
+                errors.push(`Row ${i + 2}: ${error.errors?.[0]?.message || 'Invalid data'}`);
+              }
+            }
+
+            if (errors.length > 0) {
+              toast({
+                title: "CSV Validation Errors",
+                description: `${errors.slice(0, 3).join('. ')}${errors.length > 3 ? '...' : ''}`,
+                variant: "destructive"
+              });
+              setUploading(false);
+              return;
+            }
+
+            if (validProducts.length === 0) {
+              toast({
+                title: "Error",
+                description: "No valid products found in CSV",
+                variant: "destructive"
+              });
+              setUploading(false);
+              return;
+            }
+
+            // Insert products directly via Supabase client
+            const { error } = await supabase
+              .from('products')
+              .insert(validProducts);
+
+            if (error) throw error;
+
+            toast({
+              title: "Success",
+              description: `Successfully uploaded ${validProducts.length} products`
+            });
+            setCsvFile(null);
+            fetchProducts();
+          } catch (error: any) {
+            console.error('CSV processing error:', error);
+            toast({
+              title: "Error",
+              description: error.message || 'Failed to process CSV',
+              variant: "destructive"
+            });
+          } finally {
+            setUploading(false);
+          }
+        },
+        error: (error) => {
+          console.error('CSV parsing error:', error);
+          toast({
+            title: "Error",
+            description: 'Failed to parse CSV file',
+            variant: "destructive"
+          });
+          setUploading(false);
+        }
       });
-
-      if (response.error) {
-        throw response.error;
-      }
-
-      const result = response.data;
-      
-      if (result.errors && result.errors.length > 0) {
-        toast({
-          title: "Partial Success",
-          description: `Imported ${result.imported} products. ${result.errors.length} errors occurred.`,
-        });
-        console.log('Import errors:', result.errors);
-      } else {
-        toast({
-          title: "Success",
-          description: `Successfully imported ${result.imported} products`,
-        });
-      }
-
-      setCsvFile(null);
-      fetchProducts();
-    } catch (error) {
-      console.error('Error uploading CSV:', error);
+    } catch (error: any) {
+      console.error('CSV upload error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to upload CSV",
+        description: error.message || 'Failed to upload CSV',
         variant: "destructive"
       });
-    } finally {
       setUploading(false);
     }
   };
 
   const downloadSampleCsv = () => {
+    const headers = ['name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity', 'image_url', 'is_active'];
     const sampleData = [
-      ['name', 'description', 'price', 'category', 'brand', 'stock_quantity', 'images', 'is_active'],
-      ['Peach Color Formal Wear', 'A soft dress, Event, Parties - Premium Quality Fabric', '22000', 'Dresses', 'Bushra\'s Collection', '15', 'https://example.com/image1.jpg;https://example.com/image2.jpg;https://example.com/image3.jpg', 'true'],
-      ['Elegant Jewelry Set', 'Stunning handcrafted jewelry perfect for special occasions', '8500', 'Jewelry', 'Bushra\'s Collection', '25', 'https://example.com/jewelry1.jpg;https://example.com/jewelry2.jpg', 'true']
+      ['Summer Dress', 'Beautiful floral summer dress perfect for warm weather occasions', '2999', '3499', 'Fashion Brand', 'Women', '10', 'https://example.com/image.jpg', 'true'],
+      ['Casual Shirt', 'Comfortable cotton casual shirt for everyday wear', '1499', '1799', 'Style Co', 'Men', '15', 'https://example.com/shirt.jpg', 'true']
     ];
     
-    const csvContent = sampleData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const csv = [headers, ...sampleData].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'product-sample.csv';
+    a.download = 'products-sample.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -661,22 +724,22 @@ const AdminProducts = () => {
                     {showInstructions && (
                       <div className="p-4 border rounded-lg space-y-3 text-sm">
                         <h5 className="font-medium">CSV Format Requirements:</h5>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          CSV must include these columns (exact names):
+                        </p>
                         <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                          <li><strong>name*</strong> - Product name (required)</li>
-                          <li><strong>price*</strong> - Sale price in PKR (required)</li>
-                          <li><strong>listPrice*</strong> - Original price in PKR (required)</li>
-                          <li><strong>category*</strong> - Product category (required)</li>
-                          <li><strong>countInStock*</strong> - Available quantity (required)</li>
-                          <li><strong>images*</strong> - Image URLs separated by semicolons (at least 1 required)</li>
-                          <li><strong>avgRating</strong> - Rating from 1-5 (optional, defaults to 5.0)</li>
-                          <li><strong>isPublished</strong> - true/false (optional, defaults to true)</li>
-                          <li><strong>description</strong> - Product description (optional)</li>
-                          <li><strong>brand</strong> - Brand name (optional, defaults to "Bushra's Collection")</li>
+                          <li><strong>name*</strong> (required, max 200 chars) - Product name</li>
+                          <li><strong>description*</strong> (required, max 2000 chars) - Product description</li>
+                          <li><strong>price*</strong> (required, number &gt; 0) - Sale price in PKR</li>
+                          <li><strong>list_price*</strong> (required, number &gt; 0) - Original/List price in PKR</li>
+                          <li><strong>brand*</strong> (required, max 100 chars) - Brand name</li>
+                          <li><strong>category*</strong> (required, max 100 chars) - Product category</li>
+                          <li><strong>stock_quantity*</strong> (required, integer ≥ 0) - Available quantity</li>
+                          <li><strong>image_url*</strong> (required) - Single image URL</li>
+                          <li><strong>is_active</strong> (optional, true/false) - Product visibility (defaults to true)</li>
                         </ul>
-                        <p className="text-muted-foreground mt-3">
-                          <strong>Image URLs:</strong> Separate multiple image URLs with semicolons (;)
-                          <br />
-                          Example: https://example.com/image1.jpg;https://example.com/image2.jpg
+                        <p className="text-xs text-amber-600 mt-3">
+                          ⚠️ Validation rules match manual form exactly. All required fields must be filled.
                         </p>
                       </div>
                     )}
