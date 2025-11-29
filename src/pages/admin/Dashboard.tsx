@@ -135,15 +135,23 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle>Hero Slider</CardTitle>
                 <CardDescription>
-                  Manage homepage hero carousel slides
+                  Manage homepage hero carousel slides • {stats.totalProducts} active
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
                 <Button 
                   onClick={() => navigate('/admin/hero-slider')}
                   className="w-full"
                 >
                   Manage Slider
+                </Button>
+                <Button 
+                  onClick={() => navigate('/admin/hero-slider')}
+                  className="w-full"
+                  variant="destructive"
+                  size="sm"
+                >
+                  Delete All Slides
                 </Button>
               </CardContent>
             </Card>
@@ -152,16 +160,24 @@ const AdminDashboard = () => {
               <CardHeader>
                 <CardTitle>Product Management</CardTitle>
                 <CardDescription>
-                  Add, edit, or remove products from your store
+                  Add, edit, or remove products • {stats.totalProducts} total
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
                 <Button 
                   onClick={() => navigate('/admin/products')}
                   className="w-full"
                   variant="outline"
                 >
                   Manage Products
+                </Button>
+                <Button 
+                  onClick={() => navigate('/admin/products')}
+                  className="w-full"
+                  variant="destructive"
+                  size="sm"
+                >
+                  Delete All Products
                 </Button>
               </CardContent>
             </Card>
@@ -252,6 +268,24 @@ const AdminDashboard = () => {
                   variant="outline"
                 >
                   Manage Payments
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Promotional Banners</CardTitle>
+                <CardDescription>
+                  Manage promotional banners on homepage
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => navigate('/admin/banners')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Manage Banners
                 </Button>
               </CardContent>
             </Card>
