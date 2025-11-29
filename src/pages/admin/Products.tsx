@@ -19,16 +19,7 @@ import { ImageUpload } from "@/components/admin/ImageUpload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import { DraftIndicator } from "@/components/admin/DraftIndicator";
-
-const productSchema = z.object({
-  name: z.string().min(1, "Product name is required"),
-  description: z.string().min(1, "Description is required"),
-  price: z.number().min(0.01, "Price must be greater than 0"),
-  list_price: z.number().min(0.01, "List price must be greater than 0"),
-  category: z.string().min(1, "Category is required"),
-  brand: z.string().min(1, "Brand is required"),
-  stock_quantity: z.number().min(0, "Stock quantity must be 0 or greater"),
-});
+import { productSchema } from "@/schemas/productSchema";
 
 interface Product {
   id: string;
@@ -307,7 +298,7 @@ const AdminProducts = () => {
                   name: row.name?.trim(),
                   description: row.description?.trim(),
                   price: parseFloat(row.price),
-                  list_price: parseFloat(row.list_price),
+                  list_price: row.list_price && row.list_price.trim() !== '' ? parseFloat(row.list_price) : undefined,
                   brand: row.brand?.trim(),
                   category: row.category?.trim(),
                   stock_quantity: parseInt(row.stock_quantity || '0')
@@ -401,7 +392,8 @@ const AdminProducts = () => {
     const headers = ['name', 'description', 'price', 'list_price', 'brand', 'category', 'stock_quantity', 'image_url', 'is_active'];
     const sampleData = [
       ['Summer Dress', 'Beautiful floral summer dress perfect for warm weather occasions', '2999', '3499', 'Fashion Brand', 'Women', '10', 'https://example.com/image.jpg', 'true'],
-      ['Casual Shirt', 'Comfortable cotton casual shirt for everyday wear', '1499', '1799', 'Style Co', 'Men', '15', 'https://example.com/shirt.jpg', 'true']
+      ['Casual Shirt', 'Comfortable cotton casual shirt for everyday wear', '1499', '1799', 'Style Co', 'Men', '15', 'https://example.com/shirt.jpg', 'true'],
+      ['Kids T-Shirt', 'Soft cotton t-shirt for children', '799', '', "Bushra's Collection", 'Kids', '20', 'https://example.com/kids-tshirt.jpg', 'true']
     ];
     
     const csv = [headers, ...sampleData].map(row => row.join(',')).join('\n');
@@ -512,14 +504,14 @@ const AdminProducts = () => {
                         </div>
 
                         <div>
-                          <Label htmlFor="list_price">List Price (PKR) *</Label>
+                          <Label htmlFor="list_price">List Price (PKR) (Optional)</Label>
                           <Input
                             id="list_price"
                             type="number"
                             step="0.01"
                             value={formData.list_price}
                             onChange={(e) => setFormData({ ...formData, list_price: e.target.value })}
-                            required
+                            placeholder="Original price for discount display"
                           />
                         </div>
                       </div>
@@ -702,6 +694,9 @@ const AdminProducts = () => {
                           <p className="text-sm text-muted-foreground">
                             Upload a CSV file with product information. Download the sample template to see the required format.
                           </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            📄 For complete documentation, see <strong>BULK-UPLOAD-GUIDE.md</strong> in project root
+                          </p>
                           <Button
                             variant="link"
                             className="px-0 h-auto mt-2"
@@ -731,7 +726,7 @@ const AdminProducts = () => {
                           <li><strong>name*</strong> (required, max 200 chars) - Product name</li>
                           <li><strong>description*</strong> (required, max 2000 chars) - Product description</li>
                           <li><strong>price*</strong> (required, number &gt; 0) - Sale price in PKR</li>
-                          <li><strong>list_price*</strong> (required, number &gt; 0) - Original/List price in PKR</li>
+                          <li><strong>list_price</strong> (optional, number &gt; 0) - Original/List price in PKR</li>
                           <li><strong>brand*</strong> (required, max 100 chars) - Brand name</li>
                           <li><strong>category*</strong> (required, max 100 chars) - Product category</li>
                           <li><strong>stock_quantity*</strong> (required, integer ≥ 0) - Available quantity</li>
