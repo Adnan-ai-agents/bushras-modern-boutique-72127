@@ -77,7 +77,7 @@ export function useFormDraft<T extends Record<string, any>>({
     }
   }, [draftKey, enabled]);
 
-  // Auto-save with debounce
+  // Auto-save immediately on every change
   const autoSave = useCallback((data: T) => {
     saveDraft(data);
   }, [saveDraft]);
