@@ -100,6 +100,7 @@ crontab -e
 3. **Test Products:**
    - Add a product with brand + description
    - Upload image
+   - Try bulk CSV upload (download sample first)
    - Should work without errors
 
 4. **Test Landing Page:**
@@ -158,7 +159,8 @@ crontab -e
 
 1. ✅ **Customize products**
    - Go to `/admin/products`
-   - Add your actual products
+   - Add products manually or use bulk CSV upload
+   - See `BULK-UPLOAD-GUIDE.md` for CSV format
 
 2. ✅ **Configure payment**
    - Go to `/admin/payment-methods`
