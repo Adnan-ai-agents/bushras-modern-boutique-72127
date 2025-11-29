@@ -88,17 +88,24 @@ crontab -e
 
 1. **Test Auth:**
    - Visit `/auth` page
-   - Sign up with email
-   - Should create profile automatically
+   - Sign up with email + phone
+   - Avatar selection modal appears
+   - Should redirect to `/dashboard`
 
 2. **Test Admin:**
-   - Visit `/admin`
+   - Visit `/admin` (after making yourself admin)
    - Should see admin dashboard
+   - Check Products, Hero Slides, Banners sections
 
 3. **Test Products:**
-   - Add a product
+   - Add a product with brand + description
    - Upload image
    - Should work without errors
+
+4. **Test Landing Page:**
+   - Visit homepage
+   - Should show 9 latest products
+   - Promotional banners appear
 
 **All working?** Setup complete! 🎉
 
